@@ -1,0 +1,824 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TikTok 创作者数据看板</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+    <style>
+        :root {
+            --bg-primary: #0a0a0a;
+            --bg-card: #161616;
+            --bg-hover: #1e1e1e;
+            --accent-red: #fe2c55;
+            --accent-cyan: #69c9d0;
+            --text-primary: #ffffff;
+            --text-secondary: #8a8a8a;
+            --text-muted: #555555;
+            --border: #2a2a2a;
+            --success: #25f4ee;
+            --warning: #ffca3a;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', sans-serif; background: var(--bg-primary); color: var(--text-primary); min-height: 100vh; }
+        .header { background: linear-gradient(135deg, #0f0f0f 0%, #1a080f 100%); border-bottom: 1px solid var(--border); padding: 14px 32px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; }
+        .header-left { display: flex; align-items: center; gap: 16px; }
+        .logo { display: flex; align-items: center; gap: 10px; font-size: 18px; font-weight: 700; }
+        .logo-icon { width: 34px; height: 34px; background: var(--accent-red); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 18px; }
+        .account-chip { background: var(--bg-card); border: 1px solid var(--border); border-radius: 20px; padding: 4px 14px; font-size: 13px; color: var(--text-secondary); }
+        .header-right { display: flex; align-items: center; gap: 16px; }
+        .last-updated { color: var(--text-muted); font-size: 13px; }
+        .btn-refresh { background: var(--accent-red); color: white; border: none; border-radius: 8px; padding: 8px 18px; font-size: 13px; cursor: pointer; transition: opacity 0.2s; }
+        .btn-refresh:hover { opacity: 0.8; }
+        .main { padding: 28px 32px; max-width: 1600px; margin: 0 auto; }
+        .overview-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px; margin-bottom: 28px; }
+        .stat-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 20px 18px; transition: border-color 0.2s, transform 0.2s; cursor: default; }
+        .stat-card:hover { border-color: var(--accent-red); transform: translateY(-2px); }
+        .stat-label { font-size: 11px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 10px; }
+        .stat-value { font-size: 30px; font-weight: 700; margin-bottom: 8px; line-height: 1; }
+        .stat-sub { font-size: 12px; color: var(--text-secondary); }
+        .stat-sub.up { color: var(--success); }
+        .tabs { display: flex; gap: 0; border-bottom: 1px solid var(--border); margin-bottom: 24px; }
+        .tab { padding: 11px 22px; font-size: 14px; font-weight: 500; color: var(--text-secondary); cursor: pointer; border-bottom: 2px solid transparent; transition: all 0.2s; }
+        .tab:hover { color: var(--text-primary); }
+        .tab.active { color: var(--text-primary); border-bottom-color: var(--accent-red); }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        .card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; margin-bottom: 20px; }
+        .card-header { padding: 16px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+        .card-header h3 { font-size: 15px; font-weight: 600; }
+        .card-body { padding: 20px; }
+        .chart-container { position: relative; height: 260px; }
+        .sort-btns { display: flex; gap: 6px; }
+        .sort-btn { background: #222; border: 1px solid var(--border); color: var(--text-secondary); border-radius: 6px; padding: 5px 11px; font-size: 12px; cursor: pointer; transition: all 0.15s; }
+        .sort-btn:hover { border-color: var(--accent-red); color: white; }
+        .sort-btn.active { background: var(--accent-red); border-color: var(--accent-red); color: white; }
+        .table-wrap { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; }
+        thead th { text-align: left; padding: 11px 16px; font-size: 11px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid var(--border); cursor: pointer; white-space: nowrap; }
+        thead th:hover { color: var(--text-primary); }
+        tbody tr { border-bottom: 1px solid var(--border); transition: background 0.12s; }
+        tbody tr:last-child { border-bottom: none; }
+        tbody tr:hover { background: var(--bg-hover); }
+        td { padding: 13px 16px; font-size: 13px; vertical-align: middle; }
+        .video-cell { display: flex; align-items: center; gap: 12px; }
+        .video-thumb { width: 46px; height: 46px; border-radius: 6px; background: #222; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; }
+        .video-info .vtitle { font-weight: 500; max-width: 260px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-bottom: 4px; }
+        .video-info .vdate { font-size: 11px; color: var(--text-secondary); }
+        .metric { font-weight: 600; }
+        .text-cyan { color: var(--accent-cyan); }
+        .text-red { color: var(--accent-red); }
+        .text-green { color: var(--success); }
+        .text-muted { color: var(--text-secondary); }
+        .eng-badge { display: inline-block; padding: 3px 9px; border-radius: 12px; font-size: 12px; font-weight: 600; }
+        .eng-high { background: rgba(37,244,238,.15); color: var(--success); }
+        .eng-mid  { background: rgba(255,202,58,.15); color: var(--warning); }
+        .eng-low  { background: rgba(254,44,85,.15); color: var(--accent-red); }
+        .live-tag { display: inline-block; background: rgba(254,44,85,.2); color: var(--accent-red); border: 1px solid rgba(254,44,85,.35); border-radius: 4px; padding: 2px 8px; font-size: 10px; font-weight: 700; letter-spacing: 0.5px; }
+        .acct-tag { display: inline-block; background: rgba(105,201,208,.15); color: var(--accent-cyan); border: 1px solid rgba(105,201,208,.3); border-radius: 4px; padding: 2px 8px; font-size: 11px; font-weight: 600; }
+
+        /* GMV input */
+        .gmv-cell { display: flex; align-items: center; gap: 6px; min-width: 110px; }
+        .gmv-input {
+            background: transparent; border: 1px solid var(--border);
+            border-radius: 6px; color: var(--success);
+            font-size: 13px; font-weight: 600;
+            padding: 4px 8px; width: 80px;
+            outline: none; transition: border-color 0.2s;
+        }
+        .gmv-input:focus { border-color: var(--success); background: rgba(37,244,238,.05); }
+        .gmv-input::placeholder { color: var(--text-muted); font-weight: 400; }
+        .gmv-save-btn {
+            background: none; border: none; color: var(--text-muted);
+            cursor: pointer; font-size: 15px; padding: 2px 4px;
+            transition: color 0.15s;
+        }
+        .gmv-save-btn:hover { color: var(--success); }
+        .gmv-saved { color: var(--success); font-size: 11px; opacity: 0; transition: opacity 0.3s; }
+        .gmv-saved.show { opacity: 1; }
+
+        /* Revenue tab */
+        .rev-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 20px; }
+        .rev-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 24px; }
+        .rev-card.hl { border-color: rgba(254,44,85,.5); background: linear-gradient(135deg,#1a0810,#161616); }
+        .rev-label { font-size: 13px; color: var(--text-secondary); margin-bottom: 12px; }
+        .rev-amount { font-size: 36px; font-weight: 700; color: var(--accent-cyan); }
+        .rev-amount.total { color: var(--accent-red); }
+        .rev-sub { margin-top: 8px; font-size: 12px; color: var(--text-secondary); }
+
+        .footer { text-align: center; padding: 24px; color: var(--text-muted); font-size: 12px; border-top: 1px solid var(--border); margin-top: 16px; }
+        @media (max-width: 1200px) { .overview-grid { grid-template-columns: repeat(3, 1fr); } }
+        @media (max-width: 768px) { .main { padding: 16px; } .header { padding: 12px 16px; } .overview-grid { grid-template-columns: repeat(2, 1fr); } .rev-grid { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <div class="header-left">
+        <div class="logo"><div class="logo-icon">♪</div><span>TikTok Dashboard</span></div>
+        <div class="account-chip" id="accountChip">@loading...</div>
+    </div>
+    <div class="header-right">
+        <span class="last-updated">最后更新：<span id="lastUpdated">—</span></span>
+        <button class="btn-refresh" onclick="location.reload()">↻ 刷新</button>
+    </div>
+</div>
+
+<div class="main">
+    <div id="overviewGrid" class="overview-grid"></div>
+
+    <div class="tabs">
+        <div class="tab active" onclick="switchTab('content',this)">📹 视频内容</div>
+        <div class="tab"        onclick="switchTab('live',this)">🔴 直播数据</div>
+        <div class="tab"        onclick="switchTab('revenue',this)">💰 收益数据</div>
+    </div>
+
+    <!-- 视频内容 tab -->
+    <div class="tab-content active" id="tab-content">
+        <div class="card">
+            <div class="card-header">
+                <h3>视频数据明细</h3>
+                <div class="sort-btns">
+                    <button class="sort-btn active" onclick="sortVideos('view_count',this)">按播放量</button>
+                    <button class="sort-btn" onclick="sortVideos('like_count',this)">按点赞</button>
+                    <button class="sort-btn" onclick="sortVideos('create_time',this)">按时间</button>
+                    <button class="sort-btn" onclick="sortVideos('engagement',this)">按互动率</button>
+                </div>
+            </div>
+            <div class="table-wrap">
+                <table>
+                    <thead><tr>
+                        <th>视频</th>
+                        <th onclick="sortVideos('view_count',null)">播放量 ↕</th>
+                        <th onclick="sortVideos('like_count',null)">点赞 ↕</th>
+                        <th onclick="sortVideos('comment_count',null)">评论 ↕</th>
+                        <th onclick="sortVideos('share_count',null)">分享 ↕</th>
+                        <th>完播率</th>
+                        <th>均观看时长</th>
+                        <th>互动率</th>
+                        <th>GMV ($)</th>
+                    </tr></thead>
+                    <tbody id="videoTbody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- 直播数据 tab -->
+    <div class="tab-content" id="tab-live">
+        <div class="card">
+            <div class="card-header">
+                <h3>直播场次明细</h3>
+                <div class="sort-btns">
+                    <button class="sort-btn active" onclick="sortLives('gmv',this)">按 GMV</button>
+                    <button class="sort-btn" onclick="sortLives('total_viewers',this)">按观看数</button>
+                    <button class="sort-btn" onclick="sortLives('new_followers',this)">按新粉</button>
+                </div>
+            </div>
+            <div class="table-wrap">
+                <table>
+                    <thead><tr>
+                        <th>直播场次</th>
+                        <th>账号</th>
+                        <th onclick="sortLives('total_viewers',null)">观看数 ↕</th>
+                        <th onclick="sortLives('gmv',null)">GMV ↕</th>
+                        <th>CTR</th>
+                        <th onclick="sortLives('product_views',null)">商品浏览 ↕</th>
+                        <th onclick="sortLives('product_clicks',null)">商品点击 ↕</th>
+                        <th>CTOR</th>
+                        <th>人均观看</th>
+                        <th onclick="sortLives('new_followers',null)">新粉 ↕</th>
+                        <th onclick="sortLives('likes',null)">点赞 ↕</th>
+                        <th onclick="sortLives('comments',null)">评论 ↕</th>
+                    </tr></thead>
+                    <tbody id="liveTbody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- 收益数据 tab -->
+    <div class="tab-content" id="tab-revenue">
+        <div class="rev-grid">
+            <div class="rev-card">
+                <div class="rev-label">📹 视频 GMV 合计</div>
+                <div class="rev-amount" id="revVideoGMV">$0</div>
+                <div class="rev-sub">已手动录入视频 GMV</div>
+            </div>
+            <div class="rev-card">
+                <div class="rev-label">🔴 直播 GMV 合计</div>
+                <div class="rev-amount" id="revLiveGMV">$0</div>
+                <div class="rev-sub">本批直播数据</div>
+            </div>
+            <div class="rev-card hl">
+                <div class="rev-label">💰 总 GMV</div>
+                <div class="rev-amount total" id="revTotal">$0</div>
+                <div class="rev-sub">视频 + 直播合计</div>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-header"><h3>每日 GMV 汇总（视频 + 直播）</h3></div>
+            <div class="card-body">
+                <div class="chart-container"><canvas id="revenueChart"></canvas></div>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-header"><h3>每日收益明细</h3></div>
+            <div class="table-wrap">
+                <table>
+                    <thead><tr>
+                        <th>日期</th>
+                        <th>视频 GMV</th>
+                        <th>直播 GMV</th>
+                        <th>当日合计</th>
+                    </tr></thead>
+                    <tbody id="revTbody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="footer">数据来源：TikTok Studio &amp; Shop &nbsp;|&nbsp; 每日定时更新 &nbsp;|&nbsp; @sunny_looove</div>
+
+<script>
+// ============================================================
+// DASHBOARD_DATA — 每日自动替换此对象
+// ============================================================
+const DASHBOARD_DATA = {
+    "user": {
+        "name": "@sunny_looove",
+        "followers": 0,
+        "following": 0,
+        "total_likes": 59,
+        "video_count": 10
+    },
+    "lastUpdated": "2026-03-20",
+    "overview": {
+        "totalViews": 6400,
+        "totalLikes": 59,
+        "totalComments": 3,
+        "totalShares": 8,
+        "avgEngagement": 1.09
+    },
+    "videos": [
+        {
+            "id": "7618917103462059277",
+            "title": "everyone wanted it-it's back.#naturalhairtiktok #humanhair #wigtok #blackbeauty #BlackGirlMagic",
+            "create_time": "2026/3/20",
+            "view_count": 238,
+            "like_count": 3,
+            "comment_count": 0,
+            "share_count": 0,
+            "save_count": 1,
+            "duration": 0,
+            "avg_watch": "4.76s",
+            "completion": "18.9%",
+            "total_watch": "0h:22m:30s",
+            "new_followers": 0,
+            "gmv": "",
+            "traffic": {
+                "推荐": "96.3%",
+                "个人资料": "3.7%",
+                "已关注": "<0.1%",
+                "搜索": "<0.1%",
+                "私信": "<0.1%",
+                "音乐": "<0.1%",
+                "其它": "<0.1%"
+            }
+        },
+        {
+            "id": "7618916423007522061",
+            "title": "Back in stock-but not for long.#naturalhairtiktok #wigtok #humanhair #BlackGirlMagic #blackbeauty #Bobwig",
+            "create_time": "2026/3/19",
+            "view_count": 281,
+            "like_count": 3,
+            "comment_count": 0,
+            "share_count": 0,
+            "save_count": 2,
+            "duration": 0,
+            "avg_watch": "4.13s",
+            "completion": "6.6%",
+            "total_watch": "0h:22m:23s",
+            "new_followers": 0,
+            "gmv": "",
+            "traffic": {
+                "推荐": "96.2%",
+                "个人资料": "3.5%",
+                "已关注": "<0.1%",
+                "搜索": "0.3%",
+                "私信": "<0.1%",
+                "音乐": "<0.1%",
+                "其它": "<0.1%"
+            }
+        },
+        {
+            "id": "7618915089844047117",
+            "title": "you saw it... now it's back.#naturalhairtiktok #wigtok #humanhair #BlackGirlMagic #Bobwig",
+            "create_time": "2026/3/19",
+            "view_count": 251,
+            "like_count": 2,
+            "comment_count": 0,
+            "share_count": 0,
+            "save_count": 1,
+            "duration": 0,
+            "avg_watch": "3.6s",
+            "completion": "6%",
+            "total_watch": "0h:15m:53s",
+            "new_followers": 0,
+            "gmv": "",
+            "traffic": {
+                "推荐": "96.2%",
+                "个人资料": "3.8%",
+                "已关注": "<0.1%",
+                "搜索": "<0.1%",
+                "私信": "<0.1%",
+                "音乐": "<0.1%",
+                "其它": "<0.1%"
+            }
+        },
+        {
+            "id": "7618914417387900174",
+            "title": "you asked for it...it's finally back#naturalhairtiktok #wigtok #humanhair #BlackGirlMagic #blackbeauty",
+            "create_time": "2026/3/19",
+            "view_count": 288,
+            "like_count": 1,
+            "comment_count": 0,
+            "share_count": 0,
+            "save_count": 1,
+            "duration": 0,
+            "avg_watch": "3.82s",
+            "completion": "6%",
+            "total_watch": "0h:20m:37s",
+            "new_followers": 0,
+            "gmv": "",
+            "traffic": {
+                "推荐": "97.3%",
+                "个人资料": "2.7%",
+                "已关注": "<0.1%",
+                "搜索": "<0.1%",
+                "私信": "<0.1%",
+                "音乐": "<0.1%",
+                "其它": "<0.1%"
+            }
+        },
+        {
+            "id": "7618913626522406157",
+            "title": "It's back...and selling fast.#naturalhairtiktok #wigtok #humanhair #blackbeauty #Bobwig",
+            "create_time": "2026/3/19",
+            "view_count": 291,
+            "like_count": 6,
+            "comment_count": 0,
+            "share_count": 0,
+            "save_count": 1,
+            "duration": 0,
+            "avg_watch": "2.81s",
+            "completion": "3.4%",
+            "total_watch": "0h:14m:20s",
+            "new_followers": 0,
+            "gmv": "",
+            "traffic": {
+                "推荐": "97.3%",
+                "个人资料": "2.7%",
+                "已关注": "<0.1%",
+                "搜索": "<0.1%",
+                "私信": "<0.1%",
+                "音乐": "<0.1%",
+                "其它": "<0.1%"
+            }
+        },
+        {
+            "id": "7618548791829892366",
+            "title": "this wig keeps selling out...#wigtok #naturalhairtiktok #humanhair #BlackGirlMagic #blackbeauty",
+            "create_time": "2026/3/19",
+            "view_count": 294,
+            "like_count": 3,
+            "comment_count": 0,
+            "share_count": 0,
+            "save_count": 2,
+            "duration": 0,
+            "avg_watch": "2.81s",
+            "completion": "5.1%",
+            "total_watch": "0h:15m:39s",
+            "new_followers": 1,
+            "gmv": "",
+            "traffic": {
+                "推荐": "96.5%",
+                "个人资料": "3.5%",
+                "已关注": "<0.1%",
+                "搜索": "<0.1%",
+                "私信": "<0.1%",
+                "音乐": "<0.1%",
+                "其它": "<0.1%"
+            }
+        },
+        {
+            "id": "7618548204023467278",
+            "title": "you missed it last time...it's back again#wigtok #humanhair #naturalhairtiktok #BlackGirlMagic #blackbeauty",
+            "create_time": "2026/3/18",
+            "view_count": 3778,
+            "like_count": 33,
+            "comment_count": 3,
+            "share_count": 6,
+            "save_count": 9,
+            "duration": 0,
+            "avg_watch": "5.41s",
+            "completion": "13.7%",
+            "total_watch": "6h:52m:0s",
+            "new_followers": 3,
+            "gmv": "",
+            "traffic": {
+                "推荐": "99.0%",
+                "个人资料": "0.3%",
+                "已关注": "<0.1%",
+                "搜索": "0.1%",
+                "私信": "0.2%",
+                "音乐": "<0.1%",
+                "其它": "0.4%"
+            }
+        },
+        {
+            "id": "7618550110300933389",
+            "title": "this wig is going crazy right now...#naturalhairtiktok #wigtok #humanhair #blackbeauty #BlackGirlMagic",
+            "create_time": "2026/3/18",
+            "view_count": 289,
+            "like_count": 1,
+            "comment_count": 0,
+            "share_count": 0,
+            "save_count": 1,
+            "duration": 0,
+            "avg_watch": "3.46s",
+            "completion": "11.2%",
+            "total_watch": "0h:18m:15s",
+            "new_followers": 0,
+            "gmv": "",
+            "traffic": {
+                "推荐": "94.8%",
+                "个人资料": "1.6%",
+                "已关注": "<0.1%",
+                "搜索": "<0.1%",
+                "私信": "<0.1%",
+                "音乐": "<0.1%",
+                "其它": "3.6%"
+            }
+        },
+        {
+            "id": "7618408897182747918",
+            "title": "$345 on offline shop... ours is only $33#wigtok #humanhair #naturalhairtiktok #BlackGirlMagic #blackbeauty",
+            "create_time": "2026/3/18",
+            "view_count": 219,
+            "like_count": 2,
+            "comment_count": 0,
+            "share_count": 0,
+            "save_count": 1,
+            "duration": 0,
+            "avg_watch": "3.26s",
+            "completion": "4.5%",
+            "total_watch": "0h:12m:6s",
+            "new_followers": 0,
+            "gmv": "",
+            "traffic": {
+                "推荐": "97.4%",
+                "个人资料": "2.2%",
+                "已关注": "<0.1%",
+                "搜索": "0.4%",
+                "私信": "<0.1%",
+                "音乐": "<0.1%",
+                "其它": "<0.1%"
+            }
+        },
+        {
+            "id": "7618182308675226893",
+            "title": "why does this wig have so many 5-star reviews?#wigtok #humanhair #naturalhairtiktok #BlackGirlMagic #HDLACE #blackbeauty",
+            "create_time": "2026/3/17",
+            "view_count": 471,
+            "like_count": 5,
+            "comment_count": 0,
+            "share_count": 2,
+            "save_count": 2,
+            "duration": 0,
+            "avg_watch": "3.81s",
+            "completion": "6.7%",
+            "total_watch": "0h:34m:51s",
+            "new_followers": 0,
+            "gmv": "",
+            "traffic": {
+                "推荐": "93.4%",
+                "个人资料": "3.0%",
+                "已关注": "<0.1%",
+                "搜索": "0.2%",
+                "私信": "<0.1%",
+                "音乐": "<0.1%",
+                "其它": "3.4%"
+            }
+        }
+    ],
+    "lives": [
+        {
+            "id": "7618833409451789070",
+            "title": "Tana's live flashsale",
+            "date": "2026-03-18",
+            "start_time": "21:26",
+            "duration": "2h19min",
+            "duration_minutes": 139,
+            "total_viewers": 1169,
+            "gmv": 167.59,
+            "ctr": "16.94%",
+            "product_views": 1934,
+            "product_clicks": 198,
+            "ctor": "1.52%",
+            "avg_watch": "26s",
+            "new_followers": 6,
+            "likes": 268,
+            "comments": 49,
+            "gift_revenue": 167.59
+        },
+        {
+            "id": "7618777985805519629",
+            "title": "Tana's wig flashsale!!",
+            "date": "2026-03-18",
+            "start_time": "17:50",
+            "duration": "2h10min",
+            "duration_minutes": 130,
+            "total_viewers": 888,
+            "gmv": 139.44,
+            "ctr": "14.30%",
+            "product_views": 1604,
+            "product_clicks": 127,
+            "ctor": "2.36%",
+            "avg_watch": "22s",
+            "new_followers": 7,
+            "likes": 1,
+            "comments": 25,
+            "gift_revenue": 139.44
+        }
+    ],
+    "revenue": {
+        "creatorFund": 0,
+        "liveGifts": 307.03,
+        "other": 0,
+        "total": 307.03,
+        "monthly": []
+    },
+    "trend": {
+        "dates": [
+            "3/17",
+            "3/18",
+            "3/19",
+            "3/20"
+        ],
+        "views": [
+            471,
+            4286,
+            1405,
+            238
+        ],
+        "likes": [
+            5,
+            36,
+            15,
+            3
+        ]
+    }
+};
+
+// ============================================================
+
+/* GMV localStorage helpers */
+const GMV_KEY = 'tiktok_video_gmv';
+function loadGmvMap() {
+    try { return JSON.parse(localStorage.getItem(GMV_KEY) || '{}'); } catch(e) { return {}; }
+}
+function saveGmvMap(map) {
+    localStorage.setItem(GMV_KEY, JSON.stringify(map));
+}
+
+function fmt(n) {
+    if (n == null || n === '') return '—';
+    if (n >= 1000000) return (n/1000000).toFixed(1) + 'M';
+    if (n >= 10000)   return (n/10000).toFixed(1) + 'w';
+    if (n >= 1000)    return (n/1000).toFixed(1) + 'k';
+    return n.toString();
+}
+function fmtUSD(n) {
+    if (!n && n !== 0) return '—';
+    return '$' + parseFloat(n).toFixed(2);
+}
+function calcEng(v) {
+    const total = (v.like_count||0)+(v.comment_count||0)+(v.share_count||0);
+    return v.view_count > 0 ? ((total/v.view_count)*100).toFixed(2) : '0.00';
+}
+function engClass(r) {
+    const f = parseFloat(r);
+    return f >= 5 ? 'eng-high' : f >= 2 ? 'eng-mid' : 'eng-low';
+}
+
+/* Overview */
+function renderOverview(d) {
+    document.getElementById('accountChip').textContent = d.user.name;
+    document.getElementById('lastUpdated').textContent = d.lastUpdated;
+    const ov = d.overview;
+    const cards = [
+        { label:'总播放量',   value: fmt(ov.totalViews),   sub:'所有视频累计',  dir:'up' },
+        { label:'总点赞数',   value: fmt(ov.totalLikes),   sub:'粉丝互动',      dir:'up' },
+        { label:'总评论数',   value: fmt(ov.totalComments),sub:'',              dir:'neutral' },
+        { label:'总分享数',   value: fmt(ov.totalShares),  sub:'',              dir:'neutral' },
+        { label:'平均互动率', value: ov.avgEngagement+'%', sub:'行业基准约 3%', dir:'neutral' },
+    ];
+    document.getElementById('overviewGrid').innerHTML = cards.map(c => `
+        <div class="stat-card">
+            <div class="stat-label">${c.label}</div>
+            <div class="stat-value">${c.value}</div>
+            <div class="stat-sub ${c.dir}">${c.sub}</div>
+        </div>`).join('');
+}
+
+/* Video table */
+let _videos = [];
+function renderVideoTable(videos) {
+    _videos = videos;
+    const gmvMap = loadGmvMap();
+    document.getElementById('videoTbody').innerHTML = videos.map(v => {
+        const eng = calcEng(v);
+        const savedGmv = gmvMap[v.id] || v.gmv || '';
+        return `<tr>
+            <td><div class="video-cell">
+                <div class="video-thumb">▶</div>
+                <div class="video-info">
+                    <div class="vtitle" title="${v.title}">${v.title}</div>
+                    <div class="vdate">${v.create_time}</div>
+                </div>
+            </div></td>
+            <td class="metric">${fmt(v.view_count)}</td>
+            <td class="metric text-red">${fmt(v.like_count)}</td>
+            <td class="metric">${fmt(v.comment_count)}</td>
+            <td class="metric text-cyan">${fmt(v.share_count)}</td>
+            <td class="metric">${v.completion||'—'}</td>
+            <td class="text-muted">${v.avg_watch||'—'}</td>
+            <td><span class="eng-badge ${engClass(eng)}">${eng}%</span></td>
+            <td>
+                <div class="gmv-cell">
+                    <span style="color:var(--text-muted);font-size:13px">$</span>
+                    <input class="gmv-input" id="gmv_${v.id}" type="number" step="0.01" min="0"
+                        placeholder="0.00" value="${savedGmv}"
+                        onkeydown="if(event.key==='Enter') saveGmv('${v.id}')"
+                        oninput="document.getElementById('gmvsave_${v.id}').style.opacity=1" />
+                    <button class="gmv-save-btn" id="gmvsave_${v.id}" onclick="saveGmv('${v.id}')" title="保存 GMV">💾</button>
+                    <span class="gmv-saved" id="gmvok_${v.id}">✓</span>
+                </div>
+            </td>
+        </tr>`;
+    }).join('');
+}
+function saveGmv(id) {
+    const input = document.getElementById('gmv_' + id);
+    const val = input.value.trim();
+    const map = loadGmvMap();
+    if (val === '' || val === '0') {
+        delete map[id];
+    } else {
+        map[id] = parseFloat(val);
+    }
+    saveGmvMap(map);
+    const ok = document.getElementById('gmvok_' + id);
+    const btn = document.getElementById('gmvsave_' + id);
+    ok.classList.add('show');
+    btn.style.opacity = '0.4';
+    setTimeout(() => { ok.classList.remove('show'); btn.style.opacity = '1'; }, 1500);
+    renderRevenue();
+}
+function sortVideos(field, btn) {
+    if (btn) {
+        document.querySelectorAll('#tab-content .sort-btn').forEach(b=>b.classList.remove('active'));
+        btn.classList.add('active');
+    }
+    const sorted = [..._videos].sort((a,b) => {
+        if (field === 'engagement') return parseFloat(calcEng(b)) - parseFloat(calcEng(a));
+        if (field === 'create_time') return (b.create_time||'').localeCompare(a.create_time||'');
+        return (b[field]||0) - (a[field]||0);
+    });
+    renderVideoTable(sorted);
+}
+
+/* Live table */
+let _lives = [];
+function renderLiveTable(lives) {
+    _lives = lives;
+    document.getElementById('liveTbody').innerHTML = lives.map(l => `<tr>
+        <td>
+            <span class="live-tag">LIVE</span>&nbsp;
+            <span style="font-weight:500">${l.title}</span>
+            <div style="font-size:11px;color:var(--text-muted);margin-top:3px">${l.date} ${l.start_time||''} · ${l.duration||''}</div>
+        </td>
+        <td><span class="acct-tag">${l.account||'@sunny_looove'}</span></td>
+        <td class="metric">${fmt(l.total_viewers)}</td>
+        <td class="metric text-green">${l.gmv ? '$'+parseFloat(l.gmv).toFixed(2) : '—'}</td>
+        <td class="metric">${l.ctr||'—'}</td>
+        <td class="metric">${fmt(l.product_views)}</td>
+        <td class="metric">${fmt(l.product_clicks)}</td>
+        <td class="metric">${l.ctor||'—'}</td>
+        <td class="text-muted">${l.avg_watch||'—'}</td>
+        <td class="metric text-cyan">+${l.new_followers||0}</td>
+        <td class="metric">${fmt(l.likes||0)}</td>
+        <td class="metric">${fmt(l.comments||0)}</td>
+    </tr>`).join('');
+}
+function sortLives(field, btn) {
+    if (btn) {
+        document.querySelectorAll('#tab-live .sort-btn').forEach(b=>b.classList.remove('active'));
+        btn.classList.add('active');
+    }
+    const sorted = [..._lives].sort((a,b) => (b[field]||0) - (a[field]||0));
+    renderLiveTable(sorted);
+}
+
+/* Revenue — daily breakdown */
+function renderRevenue() {
+    const gmvMap = loadGmvMap();
+
+    // Video GMV total
+    let videoGmvTotal = 0;
+    const videoByDay = {};
+    DASHBOARD_DATA.videos.forEach(v => {
+        const g = parseFloat(gmvMap[v.id] || v.gmv || 0);
+        videoGmvTotal += g;
+        const d = v.create_time;
+        videoByDay[d] = (videoByDay[d]||0) + g;
+    });
+
+    // Live GMV total + by day
+    let liveGmvTotal = 0;
+    const liveByDay = {};
+    DASHBOARD_DATA.lives.forEach(l => {
+        const g = parseFloat(l.gmv || 0);
+        liveGmvTotal += g;
+        const d = l.date;
+        liveByDay[d] = (liveByDay[d]||0) + g;
+    });
+
+    const total = videoGmvTotal + liveGmvTotal;
+    document.getElementById('revVideoGMV').textContent = '$' + videoGmvTotal.toFixed(2);
+    document.getElementById('revLiveGMV').textContent  = '$' + liveGmvTotal.toFixed(2);
+    document.getElementById('revTotal').textContent    = '$' + total.toFixed(2);
+
+    // All dates union
+    const allDates = [...new Set([...Object.keys(videoByDay), ...Object.keys(liveByDay)])].sort();
+
+    // Table
+    document.getElementById('revTbody').innerHTML = allDates.map(d => {
+        const vg = videoByDay[d]||0;
+        const lg = liveByDay[d]||0;
+        const tot = vg + lg;
+        return `<tr>
+            <td class="text-muted">${d}</td>
+            <td class="metric text-cyan">${vg > 0 ? '$'+vg.toFixed(2) : '—'}</td>
+            <td class="metric text-green">${lg > 0 ? '$'+lg.toFixed(2) : '—'}</td>
+            <td class="metric text-red" style="font-weight:700">${tot > 0 ? '$'+tot.toFixed(2) : '—'}</td>
+        </tr>`;
+    }).join('');
+
+    // Chart
+    const ctx = document.getElementById('revenueChart');
+    if (!ctx) return;
+    if (ctx._chartInst) ctx._chartInst.destroy();
+    ctx._chartInst = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: allDates,
+            datasets: [
+                { label: '视频 GMV', data: allDates.map(d=>videoByDay[d]||0),
+                  backgroundColor: 'rgba(105,201,208,.7)', borderRadius: 4 },
+                { label: '直播 GMV', data: allDates.map(d=>liveByDay[d]||0),
+                  backgroundColor: 'rgba(254,44,85,.7)', borderRadius: 4 }
+            ]
+        },
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            plugins: { legend: { labels: { color: '#888', font: {size:12} } } },
+            scales: {
+                x: { stacked: true, grid: {color:'#2a2a2a'}, ticks: {color:'#888'} },
+                y: { stacked: true, grid: {color:'#2a2a2a'}, ticks: {color:'#888', callback: v=>'$'+v} }
+            }
+        }
+    });
+}
+
+/* Tab switching */
+function switchTab(name, el) {
+    document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
+    if (el) el.classList.add('active');
+    document.getElementById('tab-'+name).classList.add('active');
+    if (name === 'revenue') renderRevenue();
+}
+
+/* Init */
+(function init() {
+    const d = DASHBOARD_DATA;
+    renderOverview(d);
+    renderVideoTable([...d.videos].sort((a,b) => b.view_count - a.view_count));
+    renderLiveTable([...d.lives].sort((a,b) => (b.gmv||0) - (a.gmv||0)));
+})();
+</script>
+</body>
+</html>
