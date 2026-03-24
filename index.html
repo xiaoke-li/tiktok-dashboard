@@ -1,886 +1,905 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TikTok 创作者数据看板</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
-    <style>
-        :root {
-            --bg: #0a0a0a; --card: #141414; --card2: #1a1a1a;
-            --red: #fe2c55; --cyan: #69c9d0; --green: #25f4ee;
-            --yellow: #ffca3a; --border: #2a2a2a;
-            --t1: #fff; --t2: #8a8a8a; --t3: #444;
-        }
-        * { margin:0; padding:0; box-sizing:border-box; }
-        body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC',sans-serif; background:var(--bg); color:var(--t1); min-height:100vh; }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>TikTok 创作者数据看板</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#0f0f0f;color:#e5e5e5;min-height:100vh}
+.header{background:linear-gradient(135deg,#1a1a2e,#16213e);padding:20px 24px;border-bottom:1px solid #333;display:flex;align-items:center;justify-content:space-between}
+.header h1{font-size:1.3rem;font-weight:700;color:#fff}
+.header-meta{font-size:0.75rem;color:#888}
+.tabs{display:flex;background:#1a1a1a;border-bottom:1px solid #333;padding:0 24px}
+.tab{padding:14px 20px;cursor:pointer;font-size:0.85rem;color:#888;border-bottom:3px solid transparent;transition:all .2s}
+.tab.active{color:#fe2c55;border-bottom-color:#fe2c55;font-weight:600}
+.tab:hover{color:#ccc}
+.section{display:none;padding:20px 24px}
+.section.active{display:block}
 
-        /* Header */
-        .hdr { background:linear-gradient(135deg,#0f0f0f,#1a080f); border-bottom:1px solid var(--border); padding:13px 28px; display:flex; align-items:center; justify-content:space-between; position:sticky; top:0; z-index:100; }
-        .logo { display:flex; align-items:center; gap:10px; font-size:17px; font-weight:700; }
-        .logo-icon { width:32px; height:32px; background:var(--red); border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:17px; }
-        .chip { background:var(--card); border:1px solid var(--border); border-radius:20px; padding:3px 13px; font-size:12px; color:var(--t2); }
-        .hdr-r { display:flex; align-items:center; gap:14px; }
-        .upd { color:var(--t3); font-size:12px; }
-        .btn-ref { background:var(--red); color:#fff; border:none; border-radius:7px; padding:7px 16px; font-size:12px; cursor:pointer; }
-        .btn-ref:hover { opacity:.8; }
+/* Video cards */
+.vcards-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:16px}
+.vcard{background:#1c1c1c;border-radius:12px;overflow:hidden;border:1px solid #2a2a2a;transition:border-color .2s}
+.vcard:hover{border-color:#444}
+.vcard-thumb{position:relative;height:170px;background:#111;overflow:hidden}
+.vcard-thumb img{width:100%;height:100%;object-fit:cover}
+.viral-badge{position:absolute;top:8px;left:8px;background:#fe2c55;color:#fff;font-size:0.7rem;padding:3px 8px;border-radius:20px;font-weight:700}
+.vcard-link{position:absolute;bottom:8px;right:8px;background:rgba(0,0,0,.7);color:#fff;font-size:0.7rem;padding:4px 10px;border-radius:6px;text-decoration:none}
+.vcard-link:hover{background:rgba(254,44,85,.85)}
+.vcard-body{padding:12px}
+.vcard-title{font-size:0.82rem;font-weight:600;color:#fff;line-height:1.4;margin-bottom:4px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.vcard-date{font-size:0.72rem;color:#666;margin-bottom:10px}
+.vcard-metrics{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:10px}
+.metric{background:#111;border-radius:8px;padding:8px;text-align:center}
+.mlabel{display:block;font-size:0.65rem;color:#666;margin-bottom:2px}
+.mval{display:block;font-size:0.82rem;font-weight:600;color:#e5e5e5}
+.mval.views{color:#fe2c55}
+.traffic-row{display:flex;gap:8px;margin-bottom:10px}
+.traffic-item{flex:1;background:#111;border-radius:8px;padding:8px;text-align:center}
+.tlabel{display:block;font-size:0.65rem;color:#666;margin-bottom:2px}
+.tval{display:block;font-size:0.85rem;font-weight:700;color:#aaa}
+.tval.us-high{color:#4ade80}
+.sales-section{border-top:1px solid #2a2a2a;padding-top:10px}
+.sales-inputs{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px}
+.sinput-group label{display:block;font-size:0.65rem;color:#888;margin-bottom:4px}
+.sinput{width:100%;background:#111;border:1px solid #333;color:#fff;padding:7px 10px;border-radius:8px;font-size:0.82rem;outline:none}
+.sinput:focus{border-color:#fe2c55}
+.gmv-bar{display:flex;align-items:center;gap:8px}
+.gmv-label{font-size:0.72rem;color:#888}
+.gmv-val{flex:1;font-size:1rem;font-weight:700;color:#4ade80}
+.save-btn{background:#fe2c55;color:#fff;border:none;padding:5px 12px;border-radius:6px;font-size:0.72rem;cursor:pointer;white-space:nowrap}
+.save-btn:hover{background:#d4244a}
+.saved-tip{font-size:0.7rem;color:#4ade80}
 
-        /* Layout */
-        .main { padding:24px 28px; max-width:1600px; margin:0 auto; }
+/* Live section */
+.live-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px}
+.live-card{background:#1c1c1c;border-radius:12px;padding:16px;border:1px solid #2a2a2a}
+.live-title{font-size:0.95rem;font-weight:700;color:#fff;margin-bottom:4px}
+.live-meta{font-size:0.72rem;color:#666;margin-bottom:12px}
+.live-metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.lm{text-align:center;background:#111;border-radius:8px;padding:10px}
+.lm span{display:block;font-size:0.65rem;color:#666;margin-bottom:4px}
+.lm strong{font-size:0.95rem;color:#4ade80}
 
-        /* Overview */
-        .ov-grid { display:grid; grid-template-columns:repeat(5,1fr); gap:12px; margin-bottom:24px; }
-        .ov-card { background:var(--card); border:1px solid var(--border); border-radius:11px; padding:18px 16px; }
-        .ov-label { font-size:10px; color:var(--t2); text-transform:uppercase; letter-spacing:.6px; margin-bottom:8px; }
-        .ov-val { font-size:26px; font-weight:700; margin-bottom:4px; }
-        .ov-sub { font-size:11px; color:var(--t2); }
+/* Revenue section */
+.rev-summary{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;margin-bottom:20px}
+.rev-card{background:#1c1c1c;border-radius:12px;padding:16px;border:1px solid #2a2a2a;text-align:center}
+.rev-card .rv-label{font-size:0.72rem;color:#888;margin-bottom:6px}
+.rev-card .rv-val{font-size:1.4rem;font-weight:700;color:#4ade80}
 
-        /* Tabs */
-        .tabs { display:flex; border-bottom:1px solid var(--border); margin-bottom:22px; }
-        .tab { padding:10px 20px; font-size:13px; font-weight:500; color:var(--t2); cursor:pointer; border-bottom:2px solid transparent; transition:all .2s; }
-        .tab:hover { color:var(--t1); }
-        .tab.active { color:var(--t1); border-bottom-color:var(--red); }
-        .tab-content { display:none; }
-        .tab-content.active { display:block; }
-
-        /* ── VIDEO CARDS ── */
-        .vc-toolbar { display:flex; align-items:center; justify-content:space-between; margin-bottom:18px; }
-        .vc-toolbar h3 { font-size:14px; font-weight:600; }
-        .sort-btns { display:flex; gap:6px; }
-        .sbtn { background:#1e1e1e; border:1px solid var(--border); color:var(--t2); border-radius:6px; padding:5px 11px; font-size:11px; cursor:pointer; transition:all .15s; }
-        .sbtn:hover { border-color:var(--red); color:#fff; }
-        .sbtn.on { background:var(--red); border-color:var(--red); color:#fff; }
-
-        .vcard-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(340px,1fr)); gap:16px; }
-
-        .vcard {
-            background:var(--card);
-            border:1px solid var(--border);
-            border-radius:14px;
-            overflow:hidden;
-            transition:border-color .2s, transform .2s;
-        }
-        .vcard:hover { border-color:var(--red); transform:translateY(-2px); }
-
-        /* Thumbnail */
-        .vcard-thumb {
-            width:100%; height:160px;
-            background:linear-gradient(135deg,#1a1a1a,#0f0f0f);
-            display:flex; flex-direction:column; align-items:center; justify-content:center;
-            position:relative; overflow:hidden; border-bottom:1px solid var(--border);
-        }
-        .vcard-thumb .play { font-size:36px; opacity:.4; }
-        .vcard-thumb .vdate-badge {
-            position:absolute; top:10px; right:10px;
-            background:rgba(0,0,0,.7); border:1px solid var(--border);
-            border-radius:6px; padding:3px 8px; font-size:11px; color:var(--t2);
-        }
-        .vcard-thumb .viral-badge {
-            position:absolute; top:10px; left:10px;
-            background:rgba(254,44,85,.85); border-radius:6px;
-            padding:3px 9px; font-size:10px; font-weight:700; color:#fff; letter-spacing:.5px;
-        }
-
-        /* Body */
-        .vcard-body { padding:14px 16px; }
-        .vcard-title {
-            font-size:13px; font-weight:600; line-height:1.4;
-            display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical;
-            overflow:hidden; margin-bottom:14px; color:var(--t1);
-        }
-
-        /* Metric grid inside card */
-        .vcard-metrics { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-bottom:14px; }
-        .vm { background:var(--card2); border-radius:8px; padding:9px 10px; }
-        .vm-label { font-size:9px; color:var(--t2); text-transform:uppercase; letter-spacing:.4px; margin-bottom:4px; }
-        .vm-val { font-size:16px; font-weight:700; }
-        .vm-val.red { color:var(--red); }
-        .vm-val.cyan { color:var(--cyan); }
-        .vm-val.green { color:var(--green); }
-        .vm-val.yellow { color:var(--yellow); }
-
-        /* Traffic row */
-        .vcard-traffic { display:flex; gap:8px; margin-bottom:14px; }
-        .traffic-pill {
-            flex:1; background:var(--card2); border-radius:8px; padding:8px 10px; text-align:center;
-        }
-        .traffic-pill .tp-label { font-size:9px; color:var(--t2); margin-bottom:3px; }
-        .traffic-pill .tp-val { font-size:14px; font-weight:700; }
-
-        /* Divider */
-        .vcard-divider { border:none; border-top:1px solid var(--border); margin:0 0 14px; }
-
-        /* Manual inputs */
-        .vcard-inputs { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:10px; }
-        .inp-group { background:var(--card2); border-radius:8px; padding:9px 10px; }
-        .inp-label { font-size:9px; color:var(--t2); text-transform:uppercase; letter-spacing:.4px; margin-bottom:5px; }
-        .inp-field {
-            width:100%; background:transparent; border:none; border-bottom:1px solid var(--border);
-            color:var(--t1); font-size:15px; font-weight:600; outline:none;
-            padding:2px 0; transition:border-color .2s;
-        }
-        .inp-field:focus { border-bottom-color:var(--cyan); }
-        .inp-field::placeholder { color:var(--t3); font-weight:400; font-size:13px; }
-
-        /* GMV result */
-        .vcard-gmv {
-            display:flex; align-items:center; justify-content:space-between;
-            background:linear-gradient(135deg,rgba(37,244,238,.08),rgba(37,244,238,.03));
-            border:1px solid rgba(37,244,238,.2); border-radius:8px; padding:10px 14px;
-        }
-        .gmv-label { font-size:11px; color:var(--t2); }
-        .gmv-amount { font-size:20px; font-weight:700; color:var(--green); }
-        .gmv-save { background:none; border:1px solid var(--border); color:var(--t2); border-radius:6px; padding:4px 10px; font-size:11px; cursor:pointer; transition:all .15s; margin-left:10px; }
-        .gmv-save:hover { border-color:var(--green); color:var(--green); }
-
-        /* ── LIVE TAB ── */
-        .card { background:var(--card); border:1px solid var(--border); border-radius:12px; overflow:hidden; margin-bottom:18px; }
-        .card-hdr { padding:14px 18px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; }
-        .card-hdr h3 { font-size:14px; font-weight:600; }
-        .table-wrap { overflow-x:auto; }
-        table { width:100%; border-collapse:collapse; }
-        thead th { text-align:left; padding:10px 14px; font-size:10px; color:var(--t2); text-transform:uppercase; letter-spacing:.5px; border-bottom:1px solid var(--border); white-space:nowrap; cursor:pointer; }
-        thead th:hover { color:var(--t1); }
-        tbody tr { border-bottom:1px solid var(--border); transition:background .12s; }
-        tbody tr:last-child { border-bottom:none; }
-        tbody tr:hover { background:#1c1c1c; }
-        td { padding:12px 14px; font-size:12px; vertical-align:middle; }
-        .live-tag { display:inline-block; background:rgba(254,44,85,.18); color:var(--red); border:1px solid rgba(254,44,85,.3); border-radius:4px; padding:2px 7px; font-size:9px; font-weight:700; }
-        .acct-tag { display:inline-block; background:rgba(105,201,208,.12); color:var(--cyan); border:1px solid rgba(105,201,208,.25); border-radius:4px; padding:2px 7px; font-size:10px; font-weight:600; }
-        .metric { font-weight:600; }
-        .tc { color:var(--cyan); } .tr { color:var(--red); } .tg { color:var(--green); } .ty { color:var(--yellow); } .tm { color:var(--t2); }
-
-        /* Revenue tab */
-        .rev-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin-bottom:18px; }
-        .rev-card { background:var(--card); border:1px solid var(--border); border-radius:12px; padding:22px; }
-        .rev-card.hl { border-color:rgba(254,44,85,.4); background:linear-gradient(135deg,#1a0810,#141414); }
-        .rev-lbl { font-size:12px; color:var(--t2); margin-bottom:10px; }
-        .rev-amt { font-size:32px; font-weight:700; color:var(--cyan); }
-        .rev-amt.tot { color:var(--red); }
-        .rev-sub { margin-top:6px; font-size:11px; color:var(--t2); }
-        .chart-box { position:relative; height:250px; }
-        .card-body { padding:18px; }
-
-        .footer { text-align:center; padding:22px; color:var(--t3); font-size:11px; border-top:1px solid var(--border); margin-top:12px; }
-
-        @media(max-width:900px) { .ov-grid{grid-template-columns:repeat(3,1fr);} .vcard-grid{grid-template-columns:1fr;} .rev-grid{grid-template-columns:1fr;} }
-        @media(max-width:600px) { .main{padding:14px;} .hdr{padding:10px 14px;} .ov-grid{grid-template-columns:repeat(2,1fr);} }
-    </style>
+.sort-bar{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap}
+.sort-btn{background:#1c1c1c;border:1px solid #333;color:#aaa;padding:6px 14px;border-radius:20px;font-size:0.75rem;cursor:pointer}
+.sort-btn:hover,.sort-btn.active{background:#fe2c55;border-color:#fe2c55;color:#fff}
+.stats-bar{background:#1c1c1c;border-radius:10px;padding:12px 16px;margin-bottom:16px;display:flex;gap:24px;flex-wrap:wrap;border:1px solid #2a2a2a}
+.stat{text-align:center}
+.stat-label{font-size:0.65rem;color:#666;display:block}
+.stat-val{font-size:1rem;font-weight:700;color:#e5e5e5}
+</style>
 </head>
 <body>
-<div class="hdr">
-    <div style="display:flex;align-items:center;gap:14px">
-        <div class="logo"><div class="logo-icon">♪</div><span>TikTok Dashboard</span></div>
-        <div class="chip" id="accountChip">@loading...</div>
-    </div>
-    <div class="hdr-r">
-        <span class="upd">更新：<span id="lastUpdated">—</span></span>
-        <button class="btn-ref" onclick="location.reload()">↻ 刷新</button>
-    </div>
+<div class="header">
+  <div>
+    <h1>📊 TikTok 创作者数据看板</h1>
+    <div class="header-meta">@sunny_looove · 更新于 2026/3/24</div>
+  </div>
+  <div class="header-meta">16 条视频</div>
+</div>
+<div class="tabs">
+  <div class="tab active" onclick="switchTab('videos',this)">短视频内容</div>
+  <div class="tab" onclick="switchTab('live',this)">直播数据</div>
+  <div class="tab" onclick="switchTab('revenue',this)">收益数据</div>
 </div>
 
-<div class="main">
-    <div id="ovGrid" class="ov-grid"></div>
-
-    <div class="tabs">
-        <div class="tab active" onclick="switchTab('content',this)">📹 短视频内容</div>
-        <div class="tab"        onclick="switchTab('live',this)">🔴 直播数据</div>
-        <div class="tab"        onclick="switchTab('revenue',this)">💰 收益数据</div>
+<div id="tab-videos" class="section active">
+  <div class="stats-bar">
+    <div class="stat"><span class="stat-label">总播放量</span><span class="stat-val" id="total-views">—</span></div>
+    <div class="stat"><span class="stat-label">总点赞</span><span class="stat-val" id="total-likes">—</span></div>
+    <div class="stat"><span class="stat-label">总评论</span><span class="stat-val" id="total-comments">—</span></div>
+    <div class="stat"><span class="stat-label">总新增粉丝</span><span class="stat-val" id="total-followers">—</span></div>
+    <div class="stat"><span class="stat-label">视频GMV</span><span class="stat-val" id="total-video-gmv">$0.00</span></div>
+  </div>
+  <div class="sort-bar">
+    <button class="sort-btn active" onclick="sortV('date',this)">最新发布</button>
+    <button class="sort-btn" onclick="sortV('views',this)">播放量↓</button>
+    <button class="sort-btn" onclick="sortV('completion',this)">完播率↓</button>
+    <button class="sort-btn" onclick="sortV('us',this)">美国流量↓</button>
+    <button class="sort-btn" onclick="sortV('gmv',this)">GMV↓</button>
+  </div>
+  <div class="vcards-grid" id="vcards">
+<div class="vcard" id="card-7620407146345205006">
+  <div class="vcard-thumb">
+    <img src="https://p16-common-sign.tiktokcdn-us.com/tos-useast5-p-0068-tx/oobJXGFBoIDXehAAfQAAfyENnCQ7Wd9OIAfHPJ~tplv-tiktokx-origin.image?dr=9636&x-expires=1774494000&x-signature=YxxPaD9BzpodrcZyimVfRadB1Ro%3D&t=4d5b0474&ps=13740610&shp=81f88b70&shcp=43f4a2f9&idc=useast5" alt="thumb" onerror="this.style.display='none'">
+    
+    <a class="vcard-link" href="https://www.tiktok.com/@sunny_looove/video/7620407146345205006" target="_blank">▶ 查看视频</a>
+  </div>
+  <div class="vcard-body">
+    <div class="vcard-title">why is this so affordable？</div>
+    <div class="vcard-date">📅 2026/3/23</div>
+    <div class="vcard-metrics">
+      <div class="metric"><span class="mlabel">播放量</span><span class="mval views">163</span></div>
+      <div class="metric"><span class="mlabel">点赞</span><span class="mval">❤ 0</span></div>
+      <div class="metric"><span class="mlabel">评论</span><span class="mval">💬 0</span></div>
+      <div class="metric"><span class="mlabel">平均时长</span><span class="mval">⏱ 2.94s</span></div>
+      <div class="metric"><span class="mlabel">完播率</span><span class="mval">✅ 4.9%</span></div>
+      <div class="metric"><span class="mlabel">新增粉丝</span><span class="mval">➕ 0</span></div>
     </div>
-
-    <!-- 短视频 tab -->
-    <div class="tab-content active" id="tab-content">
-        <div class="vc-toolbar">
-            <h3>视频数据明细（共 <span id="vcCount">0</span> 条）</h3>
-            <div class="sort-btns">
-                <button class="sbtn on"  onclick="sortV('view_count',this)">播放量</button>
-                <button class="sbtn"     onclick="sortV('like_count',this)">点赞</button>
-                <button class="sbtn"     onclick="sortV('create_time',this)">时间</button>
-                <button class="sbtn"     onclick="sortV('gmv_calc',this)">GMV</button>
-            </div>
-        </div>
-        <div class="vcard-grid" id="vcardGrid"></div>
+    <div class="traffic-row">
+      <div class="traffic-item"><span class="tlabel">推荐流量</span><span class="tval">99.4%</span></div>
+      <div class="traffic-item"><span class="tlabel">美国流量</span><span class="tval us-high">64.6%</span></div>
     </div>
-
-    <!-- 直播 tab -->
-    <div class="tab-content" id="tab-live">
-        <div class="card">
-            <div class="card-hdr">
-                <h3>直播场次明细</h3>
-                <div class="sort-btns">
-                    <button class="sbtn on" onclick="sortL('gmv',this)">GMV</button>
-                    <button class="sbtn"    onclick="sortL('total_viewers',this)">观看数</button>
-                    <button class="sbtn"    onclick="sortL('new_followers',this)">新粉</button>
-                </div>
-            </div>
-            <div class="table-wrap">
-                <table>
-                    <thead><tr>
-                        <th>直播场次</th><th>账号</th>
-                        <th onclick="sortL('total_viewers',null)">观看数 ↕</th>
-                        <th onclick="sortL('gmv',null)">GMV ↕</th>
-                        <th>CTR</th>
-                        <th onclick="sortL('product_views',null)">商品浏览 ↕</th>
-                        <th onclick="sortL('product_clicks',null)">商品点击 ↕</th>
-                        <th>CTOR</th><th>人均观看</th>
-                        <th onclick="sortL('new_followers',null)">新粉 ↕</th>
-                        <th onclick="sortL('likes',null)">点赞 ↕</th>
-                        <th onclick="sortL('comments',null)">评论 ↕</th>
-                    </tr></thead>
-                    <tbody id="liveTbody"></tbody>
-                </table>
-            </div>
+    <div class="sales-section">
+      <div class="sales-inputs">
+        <div class="sinput-group">
+          <label>动销数量</label>
+          <input type="number" class="sinput qty-input" id="qty-7620407146345205006" min="0" placeholder="0" oninput="calcGmv('7620407146345205006')">
         </div>
+        <div class="sinput-group">
+          <label>客单价 ($)</label>
+          <input type="number" class="sinput price-input" id="price-7620407146345205006" min="0" step="0.01" placeholder="0.00" oninput="calcGmv('7620407146345205006')">
+        </div>
+      </div>
+      <div class="gmv-bar">
+        <span class="gmv-label">GMV</span>
+        <span class="gmv-val" id="gmv-7620407146345205006">$0.00</span>
+        <button class="save-btn" onclick="saveSales('7620407146345205006')">保存</button>
+        <span class="saved-tip" id="tip-7620407146345205006"></span>
+      </div>
     </div>
-
-    <!-- 收益 tab -->
-    <div class="tab-content" id="tab-revenue">
-        <div class="rev-grid">
-            <div class="rev-card">
-                <div class="rev-lbl">📹 视频 GMV（自动计算）</div>
-                <div class="rev-amt" id="revV">$0.00</div>
-                <div class="rev-sub">动销数量 × 客单价 合计</div>
-            </div>
-            <div class="rev-card">
-                <div class="rev-lbl">🔴 直播 GMV</div>
-                <div class="rev-amt" id="revL">$0.00</div>
-                <div class="rev-sub">本批直播数据</div>
-            </div>
-            <div class="rev-card hl">
-                <div class="rev-lbl">💰 总 GMV</div>
-                <div class="rev-amt tot" id="revT">$0.00</div>
-                <div class="rev-sub">视频 + 直播合计</div>
-            </div>
-        </div>
-        <div class="card">
-            <div class="card-hdr"><h3>每日 GMV 汇总</h3></div>
-            <div class="card-body"><div class="chart-box"><canvas id="revChart"></canvas></div></div>
-        </div>
-        <div class="card">
-            <div class="card-hdr"><h3>每日明细</h3></div>
-            <div class="table-wrap">
-                <table>
-                    <thead><tr><th>日期</th><th>视频 GMV</th><th>直播 GMV</th><th>合计</th></tr></thead>
-                    <tbody id="revTbody"></tbody>
-                </table>
-            </div>
-        </div>
-    </div>
+  </div>
 </div>
-<div class="footer">数据来源：TikTok Studio & Shop &nbsp;|&nbsp; @sunny_looove</div>
+
+<div class="vcard" id="card-7620407961847991566">
+  <div class="vcard-thumb">
+    <img src="https://p19-common-sign.tiktokcdn-us.com/tos-useast5-p-0068-tx/oYQuxL3EIQGIAfgekCeE6A1ArAwXTGkqHAnTEF~tplv-tiktokx-origin.image?dr=9636&x-expires=1774494000&x-signature=xrOSvnsKIkGbVGat9%2B9DYNbu3Ho%3D&t=4d5b0474&ps=13740610&shp=81f88b70&shcp=43f4a2f9&idc=useast5" alt="thumb" onerror="this.style.display='none'">
+    
+    <a class="vcard-link" href="https://www.tiktok.com/@sunny_looove/video/7620407961847991566" target="_blank">▶ 查看视频</a>
+  </div>
+  <div class="vcard-body">
+    <div class="vcard-title">real human hair...for THIS price?!</div>
+    <div class="vcard-date">📅 2026/3/23</div>
+    <div class="vcard-metrics">
+      <div class="metric"><span class="mlabel">播放量</span><span class="mval views">204</span></div>
+      <div class="metric"><span class="mlabel">点赞</span><span class="mval">❤ 5</span></div>
+      <div class="metric"><span class="mlabel">评论</span><span class="mval">💬 0</span></div>
+      <div class="metric"><span class="mlabel">平均时长</span><span class="mval">⏱ 3.66s</span></div>
+      <div class="metric"><span class="mlabel">完播率</span><span class="mval">✅ 7%</span></div>
+      <div class="metric"><span class="mlabel">新增粉丝</span><span class="mval">➕ 1</span></div>
+    </div>
+    <div class="traffic-row">
+      <div class="traffic-item"><span class="tlabel">推荐流量</span><span class="tval">97.7%</span></div>
+      <div class="traffic-item"><span class="tlabel">美国流量</span><span class="tval us-high">95.1%</span></div>
+    </div>
+    <div class="sales-section">
+      <div class="sales-inputs">
+        <div class="sinput-group">
+          <label>动销数量</label>
+          <input type="number" class="sinput qty-input" id="qty-7620407961847991566" min="0" placeholder="0" oninput="calcGmv('7620407961847991566')">
+        </div>
+        <div class="sinput-group">
+          <label>客单价 ($)</label>
+          <input type="number" class="sinput price-input" id="price-7620407961847991566" min="0" step="0.01" placeholder="0.00" oninput="calcGmv('7620407961847991566')">
+        </div>
+      </div>
+      <div class="gmv-bar">
+        <span class="gmv-label">GMV</span>
+        <span class="gmv-val" id="gmv-7620407961847991566">$0.00</span>
+        <button class="save-btn" onclick="saveSales('7620407961847991566')">保存</button>
+        <span class="saved-tip" id="tip-7620407961847991566"></span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="vcard" id="card-7620409264900754701">
+  <div class="vcard-thumb">
+    <img src="https://p16-common-sign.tiktokcdn-us.com/tos-useast5-p-0068-tx/oYKHAKTQCgZGzEOQAPkokeICLEArGAgSee86AI~tplv-tiktokx-origin.image?dr=9636&x-expires=1774494000&x-signature=YwmR2PriWvO8E3xshQLtsgin0q0%3D&t=4d5b0474&ps=13740610&shp=81f88b70&shcp=43f4a2f9&idc=useast8" alt="thumb" onerror="this.style.display='none'">
+    
+    <a class="vcard-link" href="https://www.tiktok.com/@sunny_looove/video/7620409264900754701" target="_blank">▶ 查看视频</a>
+  </div>
+  <div class="vcard-body">
+    <div class="vcard-title">no way this costs this little</div>
+    <div class="vcard-date">📅 2026/3/23</div>
+    <div class="vcard-metrics">
+      <div class="metric"><span class="mlabel">播放量</span><span class="mval views">37</span></div>
+      <div class="metric"><span class="mlabel">点赞</span><span class="mval">❤ 1</span></div>
+      <div class="metric"><span class="mlabel">评论</span><span class="mval">💬 0</span></div>
+      <div class="metric"><span class="mlabel">平均时长</span><span class="mval">⏱ 7.71s</span></div>
+      <div class="metric"><span class="mlabel">完播率</span><span class="mval">✅ 5.4%</span></div>
+      <div class="metric"><span class="mlabel">新增粉丝</span><span class="mval">➕ 0</span></div>
+    </div>
+    <div class="traffic-row">
+      <div class="traffic-item"><span class="tlabel">推荐流量</span><span class="tval">—</span></div>
+      <div class="traffic-item"><span class="tlabel">美国流量</span><span class="tval "><100播放</span></div>
+    </div>
+    <div class="sales-section">
+      <div class="sales-inputs">
+        <div class="sinput-group">
+          <label>动销数量</label>
+          <input type="number" class="sinput qty-input" id="qty-7620409264900754701" min="0" placeholder="0" oninput="calcGmv('7620409264900754701')">
+        </div>
+        <div class="sinput-group">
+          <label>客单价 ($)</label>
+          <input type="number" class="sinput price-input" id="price-7620409264900754701" min="0" step="0.01" placeholder="0.00" oninput="calcGmv('7620409264900754701')">
+        </div>
+      </div>
+      <div class="gmv-bar">
+        <span class="gmv-label">GMV</span>
+        <span class="gmv-val" id="gmv-7620409264900754701">$0.00</span>
+        <button class="save-btn" onclick="saveSales('7620409264900754701')">保存</button>
+        <span class="saved-tip" id="tip-7620409264900754701"></span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="vcard" id="card-7620410097092594957">
+  <div class="vcard-thumb">
+    <img src="https://p16-common-sign.tiktokcdn-us.com/tos-useast5-p-0068-tx/owDBEEdiABokzAaEAAKyNIbivIiAl8XggzcI4~tplv-tiktokx-origin.image?dr=9636&x-expires=1774494000&x-signature=i%2BF5vPSTrFSUBwOqRyM3zvVqq64%3D&t=4d5b0474&ps=13740610&shp=81f88b70&shcp=43f4a2f9&idc=useast8" alt="thumb" onerror="this.style.display='none'">
+    
+    <a class="vcard-link" href="https://www.tiktok.com/@sunny_looove/video/7620410097092594957" target="_blank">▶ 查看视频</a>
+  </div>
+  <div class="vcard-body">
+    <div class="vcard-title">this shouldn't be this cheap</div>
+    <div class="vcard-date">📅 2026/3/23</div>
+    <div class="vcard-metrics">
+      <div class="metric"><span class="mlabel">播放量</span><span class="mval views">82</span></div>
+      <div class="metric"><span class="mlabel">点赞</span><span class="mval">❤ 1</span></div>
+      <div class="metric"><span class="mlabel">评论</span><span class="mval">💬 0</span></div>
+      <div class="metric"><span class="mlabel">平均时长</span><span class="mval">⏱ 5.24s</span></div>
+      <div class="metric"><span class="mlabel">完播率</span><span class="mval">✅ 14.3%</span></div>
+      <div class="metric"><span class="mlabel">新增粉丝</span><span class="mval">➕ 0</span></div>
+    </div>
+    <div class="traffic-row">
+      <div class="traffic-item"><span class="tlabel">推荐流量</span><span class="tval">—</span></div>
+      <div class="traffic-item"><span class="tlabel">美国流量</span><span class="tval "><100播放</span></div>
+    </div>
+    <div class="sales-section">
+      <div class="sales-inputs">
+        <div class="sinput-group">
+          <label>动销数量</label>
+          <input type="number" class="sinput qty-input" id="qty-7620410097092594957" min="0" placeholder="0" oninput="calcGmv('7620410097092594957')">
+        </div>
+        <div class="sinput-group">
+          <label>客单价 ($)</label>
+          <input type="number" class="sinput price-input" id="price-7620410097092594957" min="0" step="0.01" placeholder="0.00" oninput="calcGmv('7620410097092594957')">
+        </div>
+      </div>
+      <div class="gmv-bar">
+        <span class="gmv-label">GMV</span>
+        <span class="gmv-val" id="gmv-7620410097092594957">$0.00</span>
+        <button class="save-btn" onclick="saveSales('7620410097092594957')">保存</button>
+        <span class="saved-tip" id="tip-7620410097092594957"></span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="vcard" id="card-7619284584215153934">
+  <div class="vcard-thumb">
+    <img src="https://p16-common-sign.tiktokcdn-us.com/tos-useast5-p-0068-tx/oACilI0rEH3BJZ3B19vBfB2KFdAiAApwAI10IF~tplv-tiktokx-origin.image?dr=9636&x-expires=1774494000&x-signature=1pus8jHoJGqd65pkTSY1XjAkV4U%3D&t=4d5b0474&ps=13740610&shp=81f88b70&shcp=43f4a2f9&idc=useast8" alt="thumb" onerror="this.style.display='none'">
+    
+    <a class="vcard-link" href="https://www.tiktok.com/@sunny_looove/video/7619284584215153934" target="_blank">▶ 查看视频</a>
+  </div>
+  <div class="vcard-body">
+    <div class="vcard-title">Try it with zero risk</div>
+    <div class="vcard-date">📅 2026/3/22</div>
+    <div class="vcard-metrics">
+      <div class="metric"><span class="mlabel">播放量</span><span class="mval views">57</span></div>
+      <div class="metric"><span class="mlabel">点赞</span><span class="mval">❤ 1</span></div>
+      <div class="metric"><span class="mlabel">评论</span><span class="mval">💬 0</span></div>
+      <div class="metric"><span class="mlabel">平均时长</span><span class="mval">⏱ 3.07s</span></div>
+      <div class="metric"><span class="mlabel">完播率</span><span class="mval">✅ 6.7%</span></div>
+      <div class="metric"><span class="mlabel">新增粉丝</span><span class="mval">➕ 0</span></div>
+    </div>
+    <div class="traffic-row">
+      <div class="traffic-item"><span class="tlabel">推荐流量</span><span class="tval">—</span></div>
+      <div class="traffic-item"><span class="tlabel">美国流量</span><span class="tval "><100播放</span></div>
+    </div>
+    <div class="sales-section">
+      <div class="sales-inputs">
+        <div class="sinput-group">
+          <label>动销数量</label>
+          <input type="number" class="sinput qty-input" id="qty-7619284584215153934" min="0" placeholder="0" oninput="calcGmv('7619284584215153934')">
+        </div>
+        <div class="sinput-group">
+          <label>客单价 ($)</label>
+          <input type="number" class="sinput price-input" id="price-7619284584215153934" min="0" step="0.01" placeholder="0.00" oninput="calcGmv('7619284584215153934')">
+        </div>
+      </div>
+      <div class="gmv-bar">
+        <span class="gmv-label">GMV</span>
+        <span class="gmv-val" id="gmv-7619284584215153934">$0.00</span>
+        <button class="save-btn" onclick="saveSales('7619284584215153934')">保存</button>
+        <span class="saved-tip" id="tip-7619284584215153934"></span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="vcard" id="card-7619283722247949582">
+  <div class="vcard-thumb">
+    <img src="https://p16-common-sign.tiktokcdn-us.com/tos-useast5-p-0068-tx/oQGvaSCGAE0Ikgib0gliGFAq9CMAaAyzBA4IO~tplv-tiktokx-origin.image?dr=9636&x-expires=1774494000&x-signature=GRWYmZnh3Ti0zpmIBaQAKU1sJT4%3D&t=4d5b0474&ps=13740610&shp=81f88b70&shcp=43f4a2f9&idc=useast8" alt="thumb" onerror="this.style.display='none'">
+    
+    <a class="vcard-link" href="https://www.tiktok.com/@sunny_looove/video/7619283722247949582" target="_blank">▶ 查看视频</a>
+  </div>
+  <div class="vcard-body">
+    <div class="vcard-title">You're paying too much for wigs</div>
+    <div class="vcard-date">📅 2026/3/21</div>
+    <div class="vcard-metrics">
+      <div class="metric"><span class="mlabel">播放量</span><span class="mval views">93</span></div>
+      <div class="metric"><span class="mlabel">点赞</span><span class="mval">❤ 0</span></div>
+      <div class="metric"><span class="mlabel">评论</span><span class="mval">💬 0</span></div>
+      <div class="metric"><span class="mlabel">平均时长</span><span class="mval">⏱ 2.38s</span></div>
+      <div class="metric"><span class="mlabel">完播率</span><span class="mval">✅ 1%</span></div>
+      <div class="metric"><span class="mlabel">新增粉丝</span><span class="mval">➕ 0</span></div>
+    </div>
+    <div class="traffic-row">
+      <div class="traffic-item"><span class="tlabel">推荐流量</span><span class="tval">—</span></div>
+      <div class="traffic-item"><span class="tlabel">美国流量</span><span class="tval "><100播放</span></div>
+    </div>
+    <div class="sales-section">
+      <div class="sales-inputs">
+        <div class="sinput-group">
+          <label>动销数量</label>
+          <input type="number" class="sinput qty-input" id="qty-7619283722247949582" min="0" placeholder="0" oninput="calcGmv('7619283722247949582')">
+        </div>
+        <div class="sinput-group">
+          <label>客单价 ($)</label>
+          <input type="number" class="sinput price-input" id="price-7619283722247949582" min="0" step="0.01" placeholder="0.00" oninput="calcGmv('7619283722247949582')">
+        </div>
+      </div>
+      <div class="gmv-bar">
+        <span class="gmv-label">GMV</span>
+        <span class="gmv-val" id="gmv-7619283722247949582">$0.00</span>
+        <button class="save-btn" onclick="saveSales('7619283722247949582')">保存</button>
+        <span class="saved-tip" id="tip-7619283722247949582"></span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="vcard" id="card-7618917103462059277">
+  <div class="vcard-thumb">
+    <img src="https://p16-common-sign.tiktokcdn-us.com/tos-useast5-p-0068-tx/oY1PvaACPBUFA3lSA7ia9HVAigb3AGZkITUE4~tplv-tiktokx-origin.image?dr=9636&x-expires=1774494000&x-signature=KD2Rl8ADK6eW6unqkGYoV7TQ9vY%3D&t=4d5b0474&ps=13740610&shp=81f88b70&shcp=43f4a2f9&idc=useast5" alt="thumb" onerror="this.style.display='none'">
+    
+    <a class="vcard-link" href="https://www.tiktok.com/@sunny_looove/video/7618917103462059277" target="_blank">▶ 查看视频</a>
+  </div>
+  <div class="vcard-body">
+    <div class="vcard-title">everyone wanted it-it's back.</div>
+    <div class="vcard-date">📅 2026/3/20</div>
+    <div class="vcard-metrics">
+      <div class="metric"><span class="mlabel">播放量</span><span class="mval views">389</span></div>
+      <div class="metric"><span class="mlabel">点赞</span><span class="mval">❤ 3</span></div>
+      <div class="metric"><span class="mlabel">评论</span><span class="mval">💬 0</span></div>
+      <div class="metric"><span class="mlabel">平均时长</span><span class="mval">⏱ 4.91s</span></div>
+      <div class="metric"><span class="mlabel">完播率</span><span class="mval">✅ 19.8%</span></div>
+      <div class="metric"><span class="mlabel">新增粉丝</span><span class="mval">➕ 0</span></div>
+    </div>
+    <div class="traffic-row">
+      <div class="traffic-item"><span class="tlabel">推荐流量</span><span class="tval">94.3%</span></div>
+      <div class="traffic-item"><span class="tlabel">美国流量</span><span class="tval ">—</span></div>
+    </div>
+    <div class="sales-section">
+      <div class="sales-inputs">
+        <div class="sinput-group">
+          <label>动销数量</label>
+          <input type="number" class="sinput qty-input" id="qty-7618917103462059277" min="0" placeholder="0" oninput="calcGmv('7618917103462059277')">
+        </div>
+        <div class="sinput-group">
+          <label>客单价 ($)</label>
+          <input type="number" class="sinput price-input" id="price-7618917103462059277" min="0" step="0.01" placeholder="0.00" oninput="calcGmv('7618917103462059277')">
+        </div>
+      </div>
+      <div class="gmv-bar">
+        <span class="gmv-label">GMV</span>
+        <span class="gmv-val" id="gmv-7618917103462059277">$0.00</span>
+        <button class="save-btn" onclick="saveSales('7618917103462059277')">保存</button>
+        <span class="saved-tip" id="tip-7618917103462059277"></span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="vcard" id="card-7618916423007522061">
+  <div class="vcard-thumb">
+    <img src="https://p16-common-sign.tiktokcdn-us.com/tos-useast5-p-0068-tx/oUnkD7IIPiCgTz4pBWA0nvzbExiALlWAAaAPl~tplv-tiktokx-origin.image?dr=9636&x-expires=1774494000&x-signature=M2mQM15ySZbztdUqCI5qTxJAOZw%3D&t=4d5b0474&ps=13740610&shp=81f88b70&shcp=43f4a2f9&idc=useast5" alt="thumb" onerror="this.style.display='none'">
+    
+    <a class="vcard-link" href="https://www.tiktok.com/@sunny_looove/video/7618916423007522061" target="_blank">▶ 查看视频</a>
+  </div>
+  <div class="vcard-body">
+    <div class="vcard-title">Back in stock-but not for long.</div>
+    <div class="vcard-date">📅 2026/3/19</div>
+    <div class="vcard-metrics">
+      <div class="metric"><span class="mlabel">播放量</span><span class="mval views">529</span></div>
+      <div class="metric"><span class="mlabel">点赞</span><span class="mval">❤ 5</span></div>
+      <div class="metric"><span class="mlabel">评论</span><span class="mval">💬 0</span></div>
+      <div class="metric"><span class="mlabel">平均时长</span><span class="mval">⏱ 4.5s</span></div>
+      <div class="metric"><span class="mlabel">完播率</span><span class="mval">✅ 8.5%</span></div>
+      <div class="metric"><span class="mlabel">新增粉丝</span><span class="mval">➕ 0</span></div>
+    </div>
+    <div class="traffic-row">
+      <div class="traffic-item"><span class="tlabel">推荐流量</span><span class="tval">94.8%</span></div>
+      <div class="traffic-item"><span class="tlabel">美国流量</span><span class="tval ">26.3%</span></div>
+    </div>
+    <div class="sales-section">
+      <div class="sales-inputs">
+        <div class="sinput-group">
+          <label>动销数量</label>
+          <input type="number" class="sinput qty-input" id="qty-7618916423007522061" min="0" placeholder="0" oninput="calcGmv('7618916423007522061')">
+        </div>
+        <div class="sinput-group">
+          <label>客单价 ($)</label>
+          <input type="number" class="sinput price-input" id="price-7618916423007522061" min="0" step="0.01" placeholder="0.00" oninput="calcGmv('7618916423007522061')">
+        </div>
+      </div>
+      <div class="gmv-bar">
+        <span class="gmv-label">GMV</span>
+        <span class="gmv-val" id="gmv-7618916423007522061">$0.00</span>
+        <button class="save-btn" onclick="saveSales('7618916423007522061')">保存</button>
+        <span class="saved-tip" id="tip-7618916423007522061"></span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="vcard" id="card-7618915089844047117">
+  <div class="vcard-thumb">
+    <img src="https://p16-common-sign.tiktokcdn-us.com/tos-useast5-p-0068-tx/oEovGEmgSI4YAAkCytASDA9iBbivaA0pi8hl7~tplv-tiktokx-origin.image?dr=9636&x-expires=1774494000&x-signature=O2%2Fr5jaNDDYBb2j0LmCYXg8pOco%3D&t=4d5b0474&ps=13740610&shp=81f88b70&shcp=43f4a2f9&idc=useast5" alt="thumb" onerror="this.style.display='none'">
+    
+    <a class="vcard-link" href="https://www.tiktok.com/@sunny_looove/video/7618915089844047117" target="_blank">▶ 查看视频</a>
+  </div>
+  <div class="vcard-body">
+    <div class="vcard-title">you saw it... now it's back.</div>
+    <div class="vcard-date">📅 2026/3/19</div>
+    <div class="vcard-metrics">
+      <div class="metric"><span class="mlabel">播放量</span><span class="mval views">301</span></div>
+      <div class="metric"><span class="mlabel">点赞</span><span class="mval">❤ 4</span></div>
+      <div class="metric"><span class="mlabel">评论</span><span class="mval">💬 0</span></div>
+      <div class="metric"><span class="mlabel">平均时长</span><span class="mval">⏱ 3.65s</span></div>
+      <div class="metric"><span class="mlabel">完播率</span><span class="mval">✅ 5%</span></div>
+      <div class="metric"><span class="mlabel">新增粉丝</span><span class="mval">➕ 0</span></div>
+    </div>
+    <div class="traffic-row">
+      <div class="traffic-item"><span class="tlabel">推荐流量</span><span class="tval">94.4%</span></div>
+      <div class="traffic-item"><span class="tlabel">美国流量</span><span class="tval ">25.9%</span></div>
+    </div>
+    <div class="sales-section">
+      <div class="sales-inputs">
+        <div class="sinput-group">
+          <label>动销数量</label>
+          <input type="number" class="sinput qty-input" id="qty-7618915089844047117" min="0" placeholder="0" oninput="calcGmv('7618915089844047117')">
+        </div>
+        <div class="sinput-group">
+          <label>客单价 ($)</label>
+          <input type="number" class="sinput price-input" id="price-7618915089844047117" min="0" step="0.01" placeholder="0.00" oninput="calcGmv('7618915089844047117')">
+        </div>
+      </div>
+      <div class="gmv-bar">
+        <span class="gmv-label">GMV</span>
+        <span class="gmv-val" id="gmv-7618915089844047117">$0.00</span>
+        <button class="save-btn" onclick="saveSales('7618915089844047117')">保存</button>
+        <span class="saved-tip" id="tip-7618915089844047117"></span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="vcard" id="card-7618914417387900174">
+  <div class="vcard-thumb">
+    <img src="https://p16-common-sign.tiktokcdn-us.com/tos-useast5-p-0068-tx/ooF3QIfQGeSeoSouAIe9A7AA5LHaANcSjQWte3~tplv-tiktokx-origin.image?dr=9636&x-expires=1774494000&x-signature=X%2Fu6ojJluE8OyW4ngLbyk0p6J3k%3D&t=4d5b0474&ps=13740610&shp=81f88b70&shcp=43f4a2f9&idc=useast5" alt="thumb" onerror="this.style.display='none'">
+    
+    <a class="vcard-link" href="https://www.tiktok.com/@sunny_looove/video/7618914417387900174" target="_blank">▶ 查看视频</a>
+  </div>
+  <div class="vcard-body">
+    <div class="vcard-title">you asked for it...it's finally back</div>
+    <div class="vcard-date">📅 2026/3/19</div>
+    <div class="vcard-metrics">
+      <div class="metric"><span class="mlabel">播放量</span><span class="mval views">319</span></div>
+      <div class="metric"><span class="mlabel">点赞</span><span class="mval">❤ 1</span></div>
+      <div class="metric"><span class="mlabel">评论</span><span class="mval">💬 0</span></div>
+      <div class="metric"><span class="mlabel">平均时长</span><span class="mval">⏱ 3.95s</span></div>
+      <div class="metric"><span class="mlabel">完播率</span><span class="mval">✅ 6.6%</span></div>
+      <div class="metric"><span class="mlabel">新增粉丝</span><span class="mval">➕ 0</span></div>
+    </div>
+    <div class="traffic-row">
+      <div class="traffic-item"><span class="tlabel">推荐流量</span><span class="tval">95.8%</span></div>
+      <div class="traffic-item"><span class="tlabel">美国流量</span><span class="tval ">21.9%</span></div>
+    </div>
+    <div class="sales-section">
+      <div class="sales-inputs">
+        <div class="sinput-group">
+          <label>动销数量</label>
+          <input type="number" class="sinput qty-input" id="qty-7618914417387900174" min="0" placeholder="0" oninput="calcGmv('7618914417387900174')">
+        </div>
+        <div class="sinput-group">
+          <label>客单价 ($)</label>
+          <input type="number" class="sinput price-input" id="price-7618914417387900174" min="0" step="0.01" placeholder="0.00" oninput="calcGmv('7618914417387900174')">
+        </div>
+      </div>
+      <div class="gmv-bar">
+        <span class="gmv-label">GMV</span>
+        <span class="gmv-val" id="gmv-7618914417387900174">$0.00</span>
+        <button class="save-btn" onclick="saveSales('7618914417387900174')">保存</button>
+        <span class="saved-tip" id="tip-7618914417387900174"></span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="vcard" id="card-7618913626522406157">
+  <div class="vcard-thumb">
+    <img src="https://p19-common-sign.tiktokcdn-us.com/tos-useast5-p-0068-tx/ocE7IADAV08uAUDpBFC7fagN2DfC1EAgSj9PCX~tplv-tiktokx-origin.image?dr=9636&x-expires=1774494000&x-signature=ky3hBJmCs%2F3SPqU%2BLy3iRikQ6sw%3D&t=4d5b0474&ps=13740610&shp=81f88b70&shcp=43f4a2f9&idc=useast5" alt="thumb" onerror="this.style.display='none'">
+    
+    <a class="vcard-link" href="https://www.tiktok.com/@sunny_looove/video/7618913626522406157" target="_blank">▶ 查看视频</a>
+  </div>
+  <div class="vcard-body">
+    <div class="vcard-title">It's back...and selling fast.</div>
+    <div class="vcard-date">📅 2026/3/19</div>
+    <div class="vcard-metrics">
+      <div class="metric"><span class="mlabel">播放量</span><span class="mval views">316</span></div>
+      <div class="metric"><span class="mlabel">点赞</span><span class="mval">❤ 6</span></div>
+      <div class="metric"><span class="mlabel">评论</span><span class="mval">💬 0</span></div>
+      <div class="metric"><span class="mlabel">平均时长</span><span class="mval">⏱ 2.83s</span></div>
+      <div class="metric"><span class="mlabel">完播率</span><span class="mval">✅ 3.4%</span></div>
+      <div class="metric"><span class="mlabel">新增粉丝</span><span class="mval">➕ 0</span></div>
+    </div>
+    <div class="traffic-row">
+      <div class="traffic-item"><span class="tlabel">推荐流量</span><span class="tval">96.3%</span></div>
+      <div class="traffic-item"><span class="tlabel">美国流量</span><span class="tval ">19.3%</span></div>
+    </div>
+    <div class="sales-section">
+      <div class="sales-inputs">
+        <div class="sinput-group">
+          <label>动销数量</label>
+          <input type="number" class="sinput qty-input" id="qty-7618913626522406157" min="0" placeholder="0" oninput="calcGmv('7618913626522406157')">
+        </div>
+        <div class="sinput-group">
+          <label>客单价 ($)</label>
+          <input type="number" class="sinput price-input" id="price-7618913626522406157" min="0" step="0.01" placeholder="0.00" oninput="calcGmv('7618913626522406157')">
+        </div>
+      </div>
+      <div class="gmv-bar">
+        <span class="gmv-label">GMV</span>
+        <span class="gmv-val" id="gmv-7618913626522406157">$0.00</span>
+        <button class="save-btn" onclick="saveSales('7618913626522406157')">保存</button>
+        <span class="saved-tip" id="tip-7618913626522406157"></span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="vcard" id="card-7618548791829892366">
+  <div class="vcard-thumb">
+    <img src="https://p19-common-sign.tiktokcdn-us.com/tos-useast5-p-0068-tx/oApuFq7CQAoOCRDCIMA1vDAqAVFxgSf9egcDWE~tplv-tiktokx-origin.image?dr=9636&x-expires=1774494000&x-signature=vcy40zVsYGIJBpZ%2BvrT%2FYNA29yA%3D&t=4d5b0474&ps=13740610&shp=81f88b70&shcp=43f4a2f9&idc=useast8" alt="thumb" onerror="this.style.display='none'">
+    
+    <a class="vcard-link" href="https://www.tiktok.com/@sunny_looove/video/7618548791829892366" target="_blank">▶ 查看视频</a>
+  </div>
+  <div class="vcard-body">
+    <div class="vcard-title">this wig keeps selling out...</div>
+    <div class="vcard-date">📅 2026/3/19</div>
+    <div class="vcard-metrics">
+      <div class="metric"><span class="mlabel">播放量</span><span class="mval views">382</span></div>
+      <div class="metric"><span class="mlabel">点赞</span><span class="mval">❤ 3</span></div>
+      <div class="metric"><span class="mlabel">评论</span><span class="mval">💬 0</span></div>
+      <div class="metric"><span class="mlabel">平均时长</span><span class="mval">⏱ 3.54s</span></div>
+      <div class="metric"><span class="mlabel">完播率</span><span class="mval">✅ 7.4%</span></div>
+      <div class="metric"><span class="mlabel">新增粉丝</span><span class="mval">➕ 1</span></div>
+    </div>
+    <div class="traffic-row">
+      <div class="traffic-item"><span class="tlabel">推荐流量</span><span class="tval">85.0%</span></div>
+      <div class="traffic-item"><span class="tlabel">美国流量</span><span class="tval us-high">100.0%</span></div>
+    </div>
+    <div class="sales-section">
+      <div class="sales-inputs">
+        <div class="sinput-group">
+          <label>动销数量</label>
+          <input type="number" class="sinput qty-input" id="qty-7618548791829892366" min="0" placeholder="0" oninput="calcGmv('7618548791829892366')">
+        </div>
+        <div class="sinput-group">
+          <label>客单价 ($)</label>
+          <input type="number" class="sinput price-input" id="price-7618548791829892366" min="0" step="0.01" placeholder="0.00" oninput="calcGmv('7618548791829892366')">
+        </div>
+      </div>
+      <div class="gmv-bar">
+        <span class="gmv-label">GMV</span>
+        <span class="gmv-val" id="gmv-7618548791829892366">$0.00</span>
+        <button class="save-btn" onclick="saveSales('7618548791829892366')">保存</button>
+        <span class="saved-tip" id="tip-7618548791829892366"></span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="vcard" id="card-7618548204023467278">
+  <div class="vcard-thumb">
+    <img src="https://p16-common-sign.tiktokcdn-us.com/tos-useast5-p-0068-tx/o8ATuhYfVpEuFSDZCID1USFoAUeugAyILLCAQC~tplv-tiktokx-origin.image?dr=9636&x-expires=1774494000&x-signature=Xb2aLwLN6duwyrgjYbLWVzijRRw%3D&t=4d5b0474&ps=13740610&shp=81f88b70&shcp=43f4a2f9&idc=useast8" alt="thumb" onerror="this.style.display='none'">
+    <span class="viral-badge">🔥 爆款</span>
+    <a class="vcard-link" href="https://www.tiktok.com/@sunny_looove/video/7618548204023467278" target="_blank">▶ 查看视频</a>
+  </div>
+  <div class="vcard-body">
+    <div class="vcard-title">you missed it last time...it's back again</div>
+    <div class="vcard-date">📅 2026/3/18</div>
+    <div class="vcard-metrics">
+      <div class="metric"><span class="mlabel">播放量</span><span class="mval views">7.3K</span></div>
+      <div class="metric"><span class="mlabel">点赞</span><span class="mval">❤ 77</span></div>
+      <div class="metric"><span class="mlabel">评论</span><span class="mval">💬 3</span></div>
+      <div class="metric"><span class="mlabel">平均时长</span><span class="mval">⏱ 5.56s</span></div>
+      <div class="metric"><span class="mlabel">完播率</span><span class="mval">✅ 15.1%</span></div>
+      <div class="metric"><span class="mlabel">新增粉丝</span><span class="mval">➕ 11</span></div>
+    </div>
+    <div class="traffic-row">
+      <div class="traffic-item"><span class="tlabel">推荐流量</span><span class="tval">97.2%</span></div>
+      <div class="traffic-item"><span class="tlabel">美国流量</span><span class="tval us-high">99.7%</span></div>
+    </div>
+    <div class="sales-section">
+      <div class="sales-inputs">
+        <div class="sinput-group">
+          <label>动销数量</label>
+          <input type="number" class="sinput qty-input" id="qty-7618548204023467278" min="0" placeholder="0" oninput="calcGmv('7618548204023467278')">
+        </div>
+        <div class="sinput-group">
+          <label>客单价 ($)</label>
+          <input type="number" class="sinput price-input" id="price-7618548204023467278" min="0" step="0.01" placeholder="0.00" oninput="calcGmv('7618548204023467278')">
+        </div>
+      </div>
+      <div class="gmv-bar">
+        <span class="gmv-label">GMV</span>
+        <span class="gmv-val" id="gmv-7618548204023467278">$0.00</span>
+        <button class="save-btn" onclick="saveSales('7618548204023467278')">保存</button>
+        <span class="saved-tip" id="tip-7618548204023467278"></span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="vcard" id="card-7618550110300933389">
+  <div class="vcard-thumb">
+    <img src="https://p16-common-sign.tiktokcdn-us.com/tos-useast5-p-0068-tx/oYAThQLCGICle6eyAzLAkVrlgEemTAHEIdAtEd~tplv-tiktokx-origin.image?dr=9636&x-expires=1774494000&x-signature=ojO9OEmtqRfknnE0MkNho2vexUw%3D&t=4d5b0474&ps=13740610&shp=81f88b70&shcp=43f4a2f9&idc=useast8" alt="thumb" onerror="this.style.display='none'">
+    
+    <a class="vcard-link" href="https://www.tiktok.com/@sunny_looove/video/7618550110300933389" target="_blank">▶ 查看视频</a>
+  </div>
+  <div class="vcard-body">
+    <div class="vcard-title">this wig is going crazy right now...</div>
+    <div class="vcard-date">📅 2026/3/18</div>
+    <div class="vcard-metrics">
+      <div class="metric"><span class="mlabel">播放量</span><span class="mval views">324</span></div>
+      <div class="metric"><span class="mlabel">点赞</span><span class="mval">❤ 1</span></div>
+      <div class="metric"><span class="mlabel">评论</span><span class="mval">💬 0</span></div>
+      <div class="metric"><span class="mlabel">平均时长</span><span class="mval">⏱ 3.52s</span></div>
+      <div class="metric"><span class="mlabel">完播率</span><span class="mval">✅ 11.7%</span></div>
+      <div class="metric"><span class="mlabel">新增粉丝</span><span class="mval">➕ 0</span></div>
+    </div>
+    <div class="traffic-row">
+      <div class="traffic-item"><span class="tlabel">推荐流量</span><span class="tval">93.6%</span></div>
+      <div class="traffic-item"><span class="tlabel">美国流量</span><span class="tval us-high">99.4%</span></div>
+    </div>
+    <div class="sales-section">
+      <div class="sales-inputs">
+        <div class="sinput-group">
+          <label>动销数量</label>
+          <input type="number" class="sinput qty-input" id="qty-7618550110300933389" min="0" placeholder="0" oninput="calcGmv('7618550110300933389')">
+        </div>
+        <div class="sinput-group">
+          <label>客单价 ($)</label>
+          <input type="number" class="sinput price-input" id="price-7618550110300933389" min="0" step="0.01" placeholder="0.00" oninput="calcGmv('7618550110300933389')">
+        </div>
+      </div>
+      <div class="gmv-bar">
+        <span class="gmv-label">GMV</span>
+        <span class="gmv-val" id="gmv-7618550110300933389">$0.00</span>
+        <button class="save-btn" onclick="saveSales('7618550110300933389')">保存</button>
+        <span class="saved-tip" id="tip-7618550110300933389"></span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="vcard" id="card-7618408897182747918">
+  <div class="vcard-thumb">
+    <img src="https://p16-common-sign.tiktokcdn-us.com/tos-useast5-p-0068-tx/oMSCunkAFgMDyX95AAAVfyfXCzDF0CEpgIAQwK~tplv-tiktokx-origin.image?dr=9636&x-expires=1774494000&x-signature=YJ0z4sWTuVF3OJ9TE%2F9dAQGoFNs%3D&t=4d5b0474&ps=13740610&shp=81f88b70&shcp=43f4a2f9&idc=useast8" alt="thumb" onerror="this.style.display='none'">
+    
+    <a class="vcard-link" href="https://www.tiktok.com/@sunny_looove/video/7618408897182747918" target="_blank">▶ 查看视频</a>
+  </div>
+  <div class="vcard-body">
+    <div class="vcard-title">$345 on offline shop... ours is only $33</div>
+    <div class="vcard-date">📅 2026/3/18</div>
+    <div class="vcard-metrics">
+      <div class="metric"><span class="mlabel">播放量</span><span class="mval views">268</span></div>
+      <div class="metric"><span class="mlabel">点赞</span><span class="mval">❤ 2</span></div>
+      <div class="metric"><span class="mlabel">评论</span><span class="mval">💬 0</span></div>
+      <div class="metric"><span class="mlabel">平均时长</span><span class="mval">⏱ 3s</span></div>
+      <div class="metric"><span class="mlabel">完播率</span><span class="mval">✅ 4.4%</span></div>
+      <div class="metric"><span class="mlabel">新增粉丝</span><span class="mval">➕ 0</span></div>
+    </div>
+    <div class="traffic-row">
+      <div class="traffic-item"><span class="tlabel">推荐流量</span><span class="tval">81.8%</span></div>
+      <div class="traffic-item"><span class="tlabel">美国流量</span><span class="tval ">35.5%</span></div>
+    </div>
+    <div class="sales-section">
+      <div class="sales-inputs">
+        <div class="sinput-group">
+          <label>动销数量</label>
+          <input type="number" class="sinput qty-input" id="qty-7618408897182747918" min="0" placeholder="0" oninput="calcGmv('7618408897182747918')">
+        </div>
+        <div class="sinput-group">
+          <label>客单价 ($)</label>
+          <input type="number" class="sinput price-input" id="price-7618408897182747918" min="0" step="0.01" placeholder="0.00" oninput="calcGmv('7618408897182747918')">
+        </div>
+      </div>
+      <div class="gmv-bar">
+        <span class="gmv-label">GMV</span>
+        <span class="gmv-val" id="gmv-7618408897182747918">$0.00</span>
+        <button class="save-btn" onclick="saveSales('7618408897182747918')">保存</button>
+        <span class="saved-tip" id="tip-7618408897182747918"></span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="vcard" id="card-7618182308675226893">
+  <div class="vcard-thumb">
+    <img src="https://p16-common-sign.tiktokcdn-us.com/tos-useast5-p-0068-tx/o0IVhSpAT86AjYl5DDEzTuFCuAAC4gffEOCA4F~tplv-tiktokx-origin.image?dr=9636&x-expires=1774494000&x-signature=I%2Bb5I7Xl6RVMv6OpQWY5nYWOPVo%3D&t=4d5b0474&ps=13740610&shp=81f88b70&shcp=43f4a2f9&idc=useast5" alt="thumb" onerror="this.style.display='none'">
+    
+    <a class="vcard-link" href="https://www.tiktok.com/@sunny_looove/video/7618182308675226893" target="_blank">▶ 查看视频</a>
+  </div>
+  <div class="vcard-body">
+    <div class="vcard-title">why does this wig have so many 5-star reviews?</div>
+    <div class="vcard-date">📅 2026/3/17</div>
+    <div class="vcard-metrics">
+      <div class="metric"><span class="mlabel">播放量</span><span class="mval views">544</span></div>
+      <div class="metric"><span class="mlabel">点赞</span><span class="mval">❤ 5</span></div>
+      <div class="metric"><span class="mlabel">评论</span><span class="mval">💬 0</span></div>
+      <div class="metric"><span class="mlabel">平均时长</span><span class="mval">⏱ 3.77s</span></div>
+      <div class="metric"><span class="mlabel">完播率</span><span class="mval">✅ 5.8%</span></div>
+      <div class="metric"><span class="mlabel">新增粉丝</span><span class="mval">➕ 0</span></div>
+    </div>
+    <div class="traffic-row">
+      <div class="traffic-item"><span class="tlabel">推荐流量</span><span class="tval">76.0%</span></div>
+      <div class="traffic-item"><span class="tlabel">美国流量</span><span class="tval ">48.8%</span></div>
+    </div>
+    <div class="sales-section">
+      <div class="sales-inputs">
+        <div class="sinput-group">
+          <label>动销数量</label>
+          <input type="number" class="sinput qty-input" id="qty-7618182308675226893" min="0" placeholder="0" oninput="calcGmv('7618182308675226893')">
+        </div>
+        <div class="sinput-group">
+          <label>客单价 ($)</label>
+          <input type="number" class="sinput price-input" id="price-7618182308675226893" min="0" step="0.01" placeholder="0.00" oninput="calcGmv('7618182308675226893')">
+        </div>
+      </div>
+      <div class="gmv-bar">
+        <span class="gmv-label">GMV</span>
+        <span class="gmv-val" id="gmv-7618182308675226893">$0.00</span>
+        <button class="save-btn" onclick="saveSales('7618182308675226893')">保存</button>
+        <span class="saved-tip" id="tip-7618182308675226893"></span>
+      </div>
+    </div>
+  </div>
+</div></div>
+</div>
+
+<div id="tab-live" class="section">
+  <div class="live-grid">
+<div class="live-card">
+  <div class="live-title">🔴 Tana's live flashsale</div>
+  <div class="live-meta">账号: @sunny_looove</div>
+  <div class="live-metrics">
+    <div class="lm"><span>GMV</span><strong>$167.59</strong></div>
+    <div class="lm"><span>订单数</span><strong>—</strong></div>
+    <div class="lm"><span>峰值在线</span><strong>—</strong></div>
+  </div>
+</div>
+<div class="live-card">
+  <div class="live-title">🔴 Tana's wig flashsale!!</div>
+  <div class="live-meta">账号: @sunny_looove</div>
+  <div class="live-metrics">
+    <div class="lm"><span>GMV</span><strong>$139.44</strong></div>
+    <div class="lm"><span>订单数</span><strong>—</strong></div>
+    <div class="lm"><span>峰值在线</span><strong>—</strong></div>
+  </div>
+</div></div>
+</div>
+
+<div id="tab-revenue" class="section">
+  <div class="rev-summary">
+    <div class="rev-card"><div class="rv-label">视频 GMV 合计</div><div class="rv-val" id="rev-video">$0.00</div></div>
+    <div class="rev-card"><div class="rv-label">直播 GMV 合计</div><div class="rv-val">$307.03</div></div>
+    <div class="rev-card"><div class="rv-label">总 GMV</div><div class="rv-val" id="rev-total">$307.03</div></div>
+  </div>
+</div>
 
 <script>
-const DASHBOARD_DATA = {
-  "user": {
-    "name": "@sunny_looove",
-    "followers": 0,
-    "following": 0,
-    "total_likes": 59,
-    "video_count": 10
-  },
-  "lastUpdated": "2026-03-20",
-  "overview": {
-    "totalViews": 6400,
-    "totalLikes": 59,
-    "totalComments": 3,
-    "totalShares": 8,
-    "avgEngagement": 1.09
-  },
-  "videos": [
-    {
-      "id": "7618917103462059277",
-      "title": "everyone wanted it-it's back.#naturalhairtiktok #humanhair #wigtok #blackbeauty #BlackGirlMagic",
-      "create_time": "2026/3/20",
-      "view_count": 238,
-      "like_count": 3,
-      "comment_count": 0,
-      "share_count": 0,
-      "save_count": 1,
-      "duration": 0,
-      "avg_watch": "4.76s",
-      "completion": "18.9%",
-      "total_watch": "0h:22m:30s",
-      "new_followers": 0,
-      "gmv": "",
-      "traffic": {
-        "推荐": "96.3%",
-        "个人资料": "3.7%",
-        "已关注": "<0.1%",
-        "搜索": "<0.1%",
-        "私信": "<0.1%",
-        "音乐": "<0.1%",
-        "其它": "<0.1%"
-      }
-    },
-    {
-      "id": "7618916423007522061",
-      "title": "Back in stock-but not for long.#naturalhairtiktok #wigtok #humanhair #BlackGirlMagic #blackbeauty #Bobwig",
-      "create_time": "2026/3/19",
-      "view_count": 281,
-      "like_count": 3,
-      "comment_count": 0,
-      "share_count": 0,
-      "save_count": 2,
-      "duration": 0,
-      "avg_watch": "4.13s",
-      "completion": "6.6%",
-      "total_watch": "0h:22m:23s",
-      "new_followers": 0,
-      "gmv": "",
-      "traffic": {
-        "推荐": "96.2%",
-        "个人资料": "3.5%",
-        "已关注": "<0.1%",
-        "搜索": "0.3%",
-        "私信": "<0.1%",
-        "音乐": "<0.1%",
-        "其它": "<0.1%"
-      }
-    },
-    {
-      "id": "7618915089844047117",
-      "title": "you saw it... now it's back.#naturalhairtiktok #wigtok #humanhair #BlackGirlMagic #Bobwig",
-      "create_time": "2026/3/19",
-      "view_count": 251,
-      "like_count": 2,
-      "comment_count": 0,
-      "share_count": 0,
-      "save_count": 1,
-      "duration": 0,
-      "avg_watch": "3.6s",
-      "completion": "6%",
-      "total_watch": "0h:15m:53s",
-      "new_followers": 0,
-      "gmv": "",
-      "traffic": {
-        "推荐": "96.2%",
-        "个人资料": "3.8%",
-        "已关注": "<0.1%",
-        "搜索": "<0.1%",
-        "私信": "<0.1%",
-        "音乐": "<0.1%",
-        "其它": "<0.1%"
-      }
-    },
-    {
-      "id": "7618914417387900174",
-      "title": "you asked for it...it's finally back#naturalhairtiktok #wigtok #humanhair #BlackGirlMagic #blackbeauty",
-      "create_time": "2026/3/19",
-      "view_count": 288,
-      "like_count": 1,
-      "comment_count": 0,
-      "share_count": 0,
-      "save_count": 1,
-      "duration": 0,
-      "avg_watch": "3.82s",
-      "completion": "6%",
-      "total_watch": "0h:20m:37s",
-      "new_followers": 0,
-      "gmv": "",
-      "traffic": {
-        "推荐": "97.3%",
-        "个人资料": "2.7%",
-        "已关注": "<0.1%",
-        "搜索": "<0.1%",
-        "私信": "<0.1%",
-        "音乐": "<0.1%",
-        "其它": "<0.1%"
-      }
-    },
-    {
-      "id": "7618913626522406157",
-      "title": "It's back...and selling fast.#naturalhairtiktok #wigtok #humanhair #blackbeauty #Bobwig",
-      "create_time": "2026/3/19",
-      "view_count": 291,
-      "like_count": 6,
-      "comment_count": 0,
-      "share_count": 0,
-      "save_count": 1,
-      "duration": 0,
-      "avg_watch": "2.81s",
-      "completion": "3.4%",
-      "total_watch": "0h:14m:20s",
-      "new_followers": 0,
-      "gmv": "",
-      "traffic": {
-        "推荐": "97.3%",
-        "个人资料": "2.7%",
-        "已关注": "<0.1%",
-        "搜索": "<0.1%",
-        "私信": "<0.1%",
-        "音乐": "<0.1%",
-        "其它": "<0.1%"
-      }
-    },
-    {
-      "id": "7618548791829892366",
-      "title": "this wig keeps selling out...#wigtok #naturalhairtiktok #humanhair #BlackGirlMagic #blackbeauty",
-      "create_time": "2026/3/19",
-      "view_count": 294,
-      "like_count": 3,
-      "comment_count": 0,
-      "share_count": 0,
-      "save_count": 2,
-      "duration": 0,
-      "avg_watch": "2.81s",
-      "completion": "5.1%",
-      "total_watch": "0h:15m:39s",
-      "new_followers": 1,
-      "gmv": "",
-      "traffic": {
-        "推荐": "96.5%",
-        "个人资料": "3.5%",
-        "已关注": "<0.1%",
-        "搜索": "<0.1%",
-        "私信": "<0.1%",
-        "音乐": "<0.1%",
-        "其它": "<0.1%"
-      }
-    },
-    {
-      "id": "7618548204023467278",
-      "title": "you missed it last time...it's back again#wigtok #humanhair #naturalhairtiktok #BlackGirlMagic #blackbeauty",
-      "create_time": "2026/3/18",
-      "view_count": 3778,
-      "like_count": 33,
-      "comment_count": 3,
-      "share_count": 6,
-      "save_count": 9,
-      "duration": 0,
-      "avg_watch": "5.41s",
-      "completion": "13.7%",
-      "total_watch": "6h:52m:0s",
-      "new_followers": 3,
-      "gmv": "",
-      "traffic": {
-        "推荐": "99.0%",
-        "个人资料": "0.3%",
-        "已关注": "<0.1%",
-        "搜索": "0.1%",
-        "私信": "0.2%",
-        "音乐": "<0.1%",
-        "其它": "0.4%"
-      }
-    },
-    {
-      "id": "7618550110300933389",
-      "title": "this wig is going crazy right now...#naturalhairtiktok #wigtok #humanhair #blackbeauty #BlackGirlMagic",
-      "create_time": "2026/3/18",
-      "view_count": 289,
-      "like_count": 1,
-      "comment_count": 0,
-      "share_count": 0,
-      "save_count": 1,
-      "duration": 0,
-      "avg_watch": "3.46s",
-      "completion": "11.2%",
-      "total_watch": "0h:18m:15s",
-      "new_followers": 0,
-      "gmv": "",
-      "traffic": {
-        "推荐": "94.8%",
-        "个人资料": "1.6%",
-        "已关注": "<0.1%",
-        "搜索": "<0.1%",
-        "私信": "<0.1%",
-        "音乐": "<0.1%",
-        "其它": "3.6%"
-      }
-    },
-    {
-      "id": "7618408897182747918",
-      "title": "$345 on offline shop... ours is only $33#wigtok #humanhair #naturalhairtiktok #BlackGirlMagic #blackbeauty",
-      "create_time": "2026/3/18",
-      "view_count": 219,
-      "like_count": 2,
-      "comment_count": 0,
-      "share_count": 0,
-      "save_count": 1,
-      "duration": 0,
-      "avg_watch": "3.26s",
-      "completion": "4.5%",
-      "total_watch": "0h:12m:6s",
-      "new_followers": 0,
-      "gmv": "",
-      "traffic": {
-        "推荐": "97.4%",
-        "个人资料": "2.2%",
-        "已关注": "<0.1%",
-        "搜索": "0.4%",
-        "私信": "<0.1%",
-        "音乐": "<0.1%",
-        "其它": "<0.1%"
-      }
-    },
-    {
-      "id": "7618182308675226893",
-      "title": "why does this wig have so many 5-star reviews?#wigtok #humanhair #naturalhairtiktok #BlackGirlMagic #HDLACE #blackbeauty",
-      "create_time": "2026/3/17",
-      "view_count": 471,
-      "like_count": 5,
-      "comment_count": 0,
-      "share_count": 2,
-      "save_count": 2,
-      "duration": 0,
-      "avg_watch": "3.81s",
-      "completion": "6.7%",
-      "total_watch": "0h:34m:51s",
-      "new_followers": 0,
-      "gmv": "",
-      "traffic": {
-        "推荐": "93.4%",
-        "个人资料": "3.0%",
-        "已关注": "<0.1%",
-        "搜索": "0.2%",
-        "私信": "<0.1%",
-        "音乐": "<0.1%",
-        "其它": "3.4%"
-      }
-    }
-  ],
-  "lives": [
-    {
-      "id": "7618833409451789070",
-      "title": "Tana's live flashsale",
-      "date": "2026-03-18",
-      "start_time": "21:26",
-      "duration": "2h19min",
-      "duration_minutes": 139,
-      "total_viewers": 1169,
-      "gmv": 167.59,
-      "ctr": "16.94%",
-      "product_views": 1934,
-      "product_clicks": 198,
-      "ctor": "1.52%",
-      "avg_watch": "26s",
-      "new_followers": 6,
-      "likes": 268,
-      "comments": 49,
-      "gift_revenue": 167.59
-    },
-    {
-      "id": "7618777985805519629",
-      "title": "Tana's wig flashsale!!",
-      "date": "2026-03-18",
-      "start_time": "17:50",
-      "duration": "2h10min",
-      "duration_minutes": 130,
-      "total_viewers": 888,
-      "gmv": 139.44,
-      "ctr": "14.30%",
-      "product_views": 1604,
-      "product_clicks": 127,
-      "ctor": "2.36%",
-      "avg_watch": "22s",
-      "new_followers": 7,
-      "likes": 1,
-      "comments": 25,
-      "gift_revenue": 139.44
-    }
-  ],
-  "revenue": {
-    "creatorFund": 0,
-    "liveGifts": 307.03,
-    "other": 0,
-    "total": 307.03,
-    "monthly": []
-  },
-  "trend": {
-    "dates": [
-      "3/17",
-      "3/18",
-      "3/19",
-      "3/20"
-    ],
-    "views": [
-      471,
-      4286,
-      1405,
-      238
-    ],
-    "likes": [
-      5,
-      36,
-      15,
-      3
-    ]
-  }
-};
+const VIDEOS = [{"id": "7620407146345205006", "title": "why is this so affordable？", "pub_date": "2026/3/23", "view_count": 163, "like_count": 0, "comment_count": 0, "share_count": 0, "save_count": 0, "avg_watch": "2.94s", "completion": "4.9%", "new_followers": 0, "recommend_pct": "99.4%", "us_pct": "64.6%", "thumbnail": "https://p16-common-sign.tiktokcdn-us.com/tos-useast5-p-0068-tx/oobJXGFBoIDXehAAfQAAfyENnCQ7Wd9OIAfHPJ~tplv-tiktokx-origin.image?dr=9636&x-expires=1774494000&x-signature=YxxPaD9BzpodrcZyimVfRadB1Ro%3D&t=4d5b0474&ps=13740610&shp=81f88b70&shcp=43f4a2f9&idc=useast5"}, {"id": "7620407961847991566", "title": "real human hair...for THIS price?!", "pub_date": "2026/3/23", "view_count": 204, "like_count": 5, "comment_count": 0, "share_count": 0, "save_count": 4, "avg_watch": "3.66s", "completion": "7%", "new_followers": 1, "recommend_pct": "97.7%", "us_pct": "95.1%", "thumbnail": "https://p19-common-sign.tiktokcdn-us.com/tos-useast5-p-0068-tx/oYQuxL3EIQGIAfgekCeE6A1ArAwXTGkqHAnTEF~tplv-tiktokx-origin.image?dr=9636&x-expires=1774494000&x-signature=xrOSvnsKIkGbVGat9%2B9DYNbu3Ho%3D&t=4d5b0474&ps=13740610&shp=81f88b70&shcp=43f4a2f9&idc=useast5"}, {"id": "7620409264900754701", "title": "no way this costs this little", "pub_date": "2026/3/23", "view_count": 37, "like_count": 1, "comment_count": 0, "share_count": 0, "save_count": 1, "avg_watch": "7.71s", "completion": "5.4%", "new_followers": 0, "recommend_pct": "—", "us_pct": "<100播放", "thumbnail": "https://p16-common-sign.tiktokcdn-us.com/tos-useast5-p-0068-tx/oYKHAKTQCgZGzEOQAPkokeICLEArGAgSee86AI~tplv-tiktokx-origin.image?dr=9636&x-expires=1774494000&x-signature=YwmR2PriWvO8E3xshQLtsgin0q0%3D&t=4d5b0474&ps=13740610&shp=81f88b70&shcp=43f4a2f9&idc=useast8"}, {"id": "7620410097092594957", "title": "this shouldn't be this cheap", "pub_date": "2026/3/23", "view_count": 82, "like_count": 1, "comment_count": 0, "share_count": 0, "save_count": 1, "avg_watch": "5.24s", "completion": "14.3%", "new_followers": 0, "recommend_pct": "—", "us_pct": "<100播放", "thumbnail": "https://p16-common-sign.tiktokcdn-us.com/tos-useast5-p-0068-tx/owDBEEdiABokzAaEAAKyNIbivIiAl8XggzcI4~tplv-tiktokx-origin.image?dr=9636&x-expires=1774494000&x-signature=i%2BF5vPSTrFSUBwOqRyM3zvVqq64%3D&t=4d5b0474&ps=13740610&shp=81f88b70&shcp=43f4a2f9&idc=useast8"}, {"id": "7619284584215153934", "title": "Try it with zero risk", "pub_date": "2026/3/22", "view_count": 57, "like_count": 1, "comment_count": 0, "share_count": 0, "save_count": 1, "avg_watch": "3.07s", "completion": "6.7%", "new_followers": 0, "recommend_pct": "—", "us_pct": "<100播放", "thumbnail": "https://p16-common-sign.tiktokcdn-us.com/tos-useast5-p-0068-tx/oACilI0rEH3BJZ3B19vBfB2KFdAiAApwAI10IF~tplv-tiktokx-origin.image?dr=9636&x-expires=1774494000&x-signature=1pus8jHoJGqd65pkTSY1XjAkV4U%3D&t=4d5b0474&ps=13740610&shp=81f88b70&shcp=43f4a2f9&idc=useast8"}, {"id": "7619283722247949582", "title": "You're paying too much for wigs", "pub_date": "2026/3/21", "view_count": 93, "like_count": 0, "comment_count": 0, "share_count": 0, "save_count": 0, "avg_watch": "2.38s", "completion": "1%", "new_followers": 0, "recommend_pct": "—", "us_pct": "<100播放", "thumbnail": "https://p16-common-sign.tiktokcdn-us.com/tos-useast5-p-0068-tx/oQGvaSCGAE0Ikgib0gliGFAq9CMAaAyzBA4IO~tplv-tiktokx-origin.image?dr=9636&x-expires=1774494000&x-signature=GRWYmZnh3Ti0zpmIBaQAKU1sJT4%3D&t=4d5b0474&ps=13740610&shp=81f88b70&shcp=43f4a2f9&idc=useast8"}, {"id": "7618917103462059277", "title": "everyone wanted it-it's back.", "pub_date": "2026/3/20", "view_count": 389, "like_count": 3, "comment_count": 0, "share_count": 0, "save_count": 1, "avg_watch": "4.91s", "completion": "19.8%", "new_followers": 0, "recommend_pct": "94.3%", "us_pct": "—", "thumbnail": "https://p16-common-sign.tiktokcdn-us.com/tos-useast5-p-0068-tx/oY1PvaACPBUFA3lSA7ia9HVAigb3AGZkITUE4~tplv-tiktokx-origin.image?dr=9636&x-expires=1774494000&x-signature=KD2Rl8ADK6eW6unqkGYoV7TQ9vY%3D&t=4d5b0474&ps=13740610&shp=81f88b70&shcp=43f4a2f9&idc=useast5"}, {"id": "7618916423007522061", "title": "Back in stock-but not for long.", "pub_date": "2026/3/19", "view_count": 529, "like_count": 5, "comment_count": 0, "share_count": 2, "save_count": 3, "avg_watch": "4.5s", "completion": "8.5%", "new_followers": 0, "recommend_pct": "94.8%", "us_pct": "26.3%", "thumbnail": "https://p16-common-sign.tiktokcdn-us.com/tos-useast5-p-0068-tx/oUnkD7IIPiCgTz4pBWA0nvzbExiALlWAAaAPl~tplv-tiktokx-origin.image?dr=9636&x-expires=1774494000&x-signature=M2mQM15ySZbztdUqCI5qTxJAOZw%3D&t=4d5b0474&ps=13740610&shp=81f88b70&shcp=43f4a2f9&idc=useast5"}, {"id": "7618915089844047117", "title": "you saw it... now it's back.", "pub_date": "2026/3/19", "view_count": 301, "like_count": 4, "comment_count": 0, "share_count": 0, "save_count": 1, "avg_watch": "3.65s", "completion": "5%", "new_followers": 0, "recommend_pct": "94.4%", "us_pct": "25.9%", "thumbnail": "https://p16-common-sign.tiktokcdn-us.com/tos-useast5-p-0068-tx/oEovGEmgSI4YAAkCytASDA9iBbivaA0pi8hl7~tplv-tiktokx-origin.image?dr=9636&x-expires=1774494000&x-signature=O2%2Fr5jaNDDYBb2j0LmCYXg8pOco%3D&t=4d5b0474&ps=13740610&shp=81f88b70&shcp=43f4a2f9&idc=useast5"}, {"id": "7618914417387900174", "title": "you asked for it...it's finally back", "pub_date": "2026/3/19", "view_count": 319, "like_count": 1, "comment_count": 0, "share_count": 0, "save_count": 1, "avg_watch": "3.95s", "completion": "6.6%", "new_followers": 0, "recommend_pct": "95.8%", "us_pct": "21.9%", "thumbnail": "https://p16-common-sign.tiktokcdn-us.com/tos-useast5-p-0068-tx/ooF3QIfQGeSeoSouAIe9A7AA5LHaANcSjQWte3~tplv-tiktokx-origin.image?dr=9636&x-expires=1774494000&x-signature=X%2Fu6ojJluE8OyW4ngLbyk0p6J3k%3D&t=4d5b0474&ps=13740610&shp=81f88b70&shcp=43f4a2f9&idc=useast5"}, {"id": "7618913626522406157", "title": "It's back...and selling fast.", "pub_date": "2026/3/19", "view_count": 316, "like_count": 6, "comment_count": 0, "share_count": 0, "save_count": 1, "avg_watch": "2.83s", "completion": "3.4%", "new_followers": 0, "recommend_pct": "96.3%", "us_pct": "19.3%", "thumbnail": "https://p19-common-sign.tiktokcdn-us.com/tos-useast5-p-0068-tx/ocE7IADAV08uAUDpBFC7fagN2DfC1EAgSj9PCX~tplv-tiktokx-origin.image?dr=9636&x-expires=1774494000&x-signature=ky3hBJmCs%2F3SPqU%2BLy3iRikQ6sw%3D&t=4d5b0474&ps=13740610&shp=81f88b70&shcp=43f4a2f9&idc=useast5"}, {"id": "7618548791829892366", "title": "this wig keeps selling out...", "pub_date": "2026/3/19", "view_count": 382, "like_count": 3, "comment_count": 0, "share_count": 0, "save_count": 2, "avg_watch": "3.54s", "completion": "7.4%", "new_followers": 1, "recommend_pct": "85.0%", "us_pct": "100.0%", "thumbnail": "https://p19-common-sign.tiktokcdn-us.com/tos-useast5-p-0068-tx/oApuFq7CQAoOCRDCIMA1vDAqAVFxgSf9egcDWE~tplv-tiktokx-origin.image?dr=9636&x-expires=1774494000&x-signature=vcy40zVsYGIJBpZ%2BvrT%2FYNA29yA%3D&t=4d5b0474&ps=13740610&shp=81f88b70&shcp=43f4a2f9&idc=useast8"}, {"id": "7618548204023467278", "title": "you missed it last time...it's back again", "pub_date": "2026/3/18", "view_count": 7301, "like_count": 77, "comment_count": 3, "share_count": 19, "save_count": 24, "avg_watch": "5.56s", "completion": "15.1%", "new_followers": 11, "recommend_pct": "97.2%", "us_pct": "99.7%", "thumbnail": "https://p16-common-sign.tiktokcdn-us.com/tos-useast5-p-0068-tx/o8ATuhYfVpEuFSDZCID1USFoAUeugAyILLCAQC~tplv-tiktokx-origin.image?dr=9636&x-expires=1774494000&x-signature=Xb2aLwLN6duwyrgjYbLWVzijRRw%3D&t=4d5b0474&ps=13740610&shp=81f88b70&shcp=43f4a2f9&idc=useast8"}, {"id": "7618550110300933389", "title": "this wig is going crazy right now...", "pub_date": "2026/3/18", "view_count": 324, "like_count": 1, "comment_count": 0, "share_count": 0, "save_count": 1, "avg_watch": "3.52s", "completion": "11.7%", "new_followers": 0, "recommend_pct": "93.6%", "us_pct": "99.4%", "thumbnail": "https://p16-common-sign.tiktokcdn-us.com/tos-useast5-p-0068-tx/oYAThQLCGICle6eyAzLAkVrlgEemTAHEIdAtEd~tplv-tiktokx-origin.image?dr=9636&x-expires=1774494000&x-signature=ojO9OEmtqRfknnE0MkNho2vexUw%3D&t=4d5b0474&ps=13740610&shp=81f88b70&shcp=43f4a2f9&idc=useast8"}, {"id": "7618408897182747918", "title": "$345 on offline shop... ours is only $33", "pub_date": "2026/3/18", "view_count": 268, "like_count": 2, "comment_count": 0, "share_count": 0, "save_count": 1, "avg_watch": "3s", "completion": "4.4%", "new_followers": 0, "recommend_pct": "81.8%", "us_pct": "35.5%", "thumbnail": "https://p16-common-sign.tiktokcdn-us.com/tos-useast5-p-0068-tx/oMSCunkAFgMDyX95AAAVfyfXCzDF0CEpgIAQwK~tplv-tiktokx-origin.image?dr=9636&x-expires=1774494000&x-signature=YJ0z4sWTuVF3OJ9TE%2F9dAQGoFNs%3D&t=4d5b0474&ps=13740610&shp=81f88b70&shcp=43f4a2f9&idc=useast8"}, {"id": "7618182308675226893", "title": "why does this wig have so many 5-star reviews?", "pub_date": "2026/3/17", "view_count": 544, "like_count": 5, "comment_count": 0, "share_count": 2, "save_count": 2, "avg_watch": "3.77s", "completion": "5.8%", "new_followers": 0, "recommend_pct": "76.0%", "us_pct": "48.8%", "thumbnail": "https://p16-common-sign.tiktokcdn-us.com/tos-useast5-p-0068-tx/o0IVhSpAT86AjYl5DDEzTuFCuAAC4gffEOCA4F~tplv-tiktokx-origin.image?dr=9636&x-expires=1774494000&x-signature=I%2Bb5I7Xl6RVMv6OpQWY5nYWOPVo%3D&t=4d5b0474&ps=13740610&shp=81f88b70&shcp=43f4a2f9&idc=useast5"}];
 
-
-/* ── localStorage helpers ── */
-const SK = 'tk_video_sales';
-function loadSales() { try { return JSON.parse(localStorage.getItem(SK)||'{}'); } catch(e){ return {}; } }
-function saveSales(m) { localStorage.setItem(SK, JSON.stringify(m)); }
-
-function fmt(n) {
-    if(n==null||n==='') return '—';
-    if(n>=1000000) return (n/1e6).toFixed(1)+'M';
-    if(n>=10000)   return (n/10000).toFixed(1)+'w';
-    if(n>=1000)    return (n/1000).toFixed(1)+'k';
-    return String(n);
-}
-function pct(s) { return s||'—'; }
-
-/* ── Overview ── */
-function renderOv(d) {
-    document.getElementById('accountChip').textContent = d.user.name;
-    document.getElementById('lastUpdated').textContent = d.lastUpdated;
-    const ov = d.overview;
-    const cards = [
-        {l:'总播放量', v:fmt(ov.totalViews)},
-        {l:'总点赞数', v:fmt(ov.totalLikes)},
-        {l:'总评论数', v:fmt(ov.totalComments)},
-        {l:'总分享数', v:fmt(ov.totalShares)},
-        {l:'平均互动率', v:ov.avgEngagement+'%'},
-    ];
-    document.getElementById('ovGrid').innerHTML = cards.map(c=>`
-        <div class="ov-card">
-            <div class="ov-label">${c.l}</div>
-            <div class="ov-val">${c.v}</div>
-        </div>`).join('');
-}
-
-/* ── Video cards ── */
-let _vdata = [];
-function calcGmv(id) {
-    const s = loadSales();
-    const qty = parseFloat(s[id+'_qty']||0);
-    const price = parseFloat(s[id+'_price']||0);
-    return qty && price ? qty*price : 0;
-}
-function renderVcards(videos) {
-    _vdata = videos;
-    document.getElementById('vcCount').textContent = videos.length;
-    const sales = loadSales();
-    document.getElementById('vcardGrid').innerHTML = videos.map(v => {
-        const isViral = v.view_count >= 1000;
-        const g = calcGmv(v.id);
-        const qty = sales[v.id+'_qty']||'';
-        const price = sales[v.id+'_price']||'';
-        const rec = v.traffic?.['推荐'] || '—';
-        const us  = sales[v.id+'_us'] || '';
-        return `
-        <div class="vcard" id="vc_${v.id}">
-            <div class="vcard-thumb">
-                <div class="play">▶</div>
-                <div class="vdate-badge">${v.create_time}</div>
-                ${isViral ? '<div class="viral-badge">🔥 爆款</div>' : ''}
-            </div>
-            <div class="vcard-body">
-                <div class="vcard-title" title="${v.title}">${v.title}</div>
-
-                <div class="vcard-metrics">
-                    <div class="vm">
-                        <div class="vm-label">播放量</div>
-                        <div class="vm-val red">${fmt(v.view_count)}</div>
-                    </div>
-                    <div class="vm">
-                        <div class="vm-label">点赞数</div>
-                        <div class="vm-val">${fmt(v.like_count)}</div>
-                    </div>
-                    <div class="vm">
-                        <div class="vm-label">评论数</div>
-                        <div class="vm-val">${fmt(v.comment_count)}</div>
-                    </div>
-                    <div class="vm">
-                        <div class="vm-label">均观看时长</div>
-                        <div class="vm-val cyan">${v.avg_watch||'—'}</div>
-                    </div>
-                    <div class="vm">
-                        <div class="vm-label">完播率</div>
-                        <div class="vm-val yellow">${v.completion||'—'}</div>
-                    </div>
-                    <div class="vm">
-                        <div class="vm-label">新增粉丝</div>
-                        <div class="vm-val green">+${v.new_followers||0}</div>
-                    </div>
-                </div>
-
-                <div class="vcard-traffic">
-                    <div class="traffic-pill">
-                        <div class="tp-label">推荐流量</div>
-                        <div class="tp-val" style="color:var(--red)">${rec}</div>
-                    </div>
-                    <div class="traffic-pill">
-                        <div class="tp-label">美国流量</div>
-                        <div class="tp-val" style="color:var(--cyan)">
-                            <input id="us_${v.id}" type="text" value="${us}"
-                                placeholder="填写%"
-                                style="background:transparent;border:none;color:var(--cyan);font-size:14px;font-weight:700;width:70px;text-align:center;outline:none;"
-                                onchange="saveUS('${v.id}',this.value)"/>
-                        </div>
-                    </div>
-                </div>
-
-                <hr class="vcard-divider">
-
-                <div class="vcard-inputs">
-                    <div class="inp-group">
-                        <div class="inp-label">动销数量（件）</div>
-                        <input class="inp-field" id="qty_${v.id}" type="number" min="0"
-                            placeholder="0" value="${qty}"
-                            oninput="updateGmv('${v.id}')"/>
-                    </div>
-                    <div class="inp-group">
-                        <div class="inp-label">客单价（$）</div>
-                        <input class="inp-field" id="price_${v.id}" type="number" min="0" step="0.01"
-                            placeholder="0.00" value="${price}"
-                            oninput="updateGmv('${v.id}')"/>
-                    </div>
-                </div>
-
-                <div class="vcard-gmv">
-                    <div>
-                        <div class="gmv-label">自动计算 GMV</div>
-                        <div class="gmv-amount" id="gmv_${v.id}">${g>0?'$'+g.toFixed(2):'—'}</div>
-                    </div>
-                    <button class="gmv-save" onclick="saveVideoSales('${v.id}')">💾 保存</button>
-                </div>
-            </div>
-        </div>`;
-    }).join('');
-}
-
-function updateGmv(id) {
-    const qty = parseFloat(document.getElementById('qty_'+id)?.value||0);
-    const price = parseFloat(document.getElementById('price_'+id)?.value||0);
-    const g = qty && price ? qty*price : 0;
-    const el = document.getElementById('gmv_'+id);
-    if(el) el.textContent = g>0 ? '$'+g.toFixed(2) : '—';
-}
-
-function saveVideoSales(id) {
-    const sales = loadSales();
-    const qty = document.getElementById('qty_'+id)?.value||'';
-    const price = document.getElementById('price_'+id)?.value||'';
-    sales[id+'_qty'] = qty;
-    sales[id+'_price'] = price;
-    saveSales(sales);
-    const btn = document.querySelector(`#vc_${id} .gmv-save`);
-    if(btn) { btn.textContent='✓ 已保存'; btn.style.color='var(--green)'; btn.style.borderColor='var(--green)'; setTimeout(()=>{ btn.textContent='💾 保存'; btn.style.color=''; btn.style.borderColor=''; },1500); }
-    if(document.getElementById('tab-revenue').classList.contains('active')) renderRevenue();
-}
-
-function saveUS(id, val) {
-    const sales = loadSales();
-    sales[id+'_us'] = val;
-    saveSales(sales);
-}
-
-function sortV(field, btn) {
-    if(btn){ document.querySelectorAll('#tab-content .sbtn').forEach(b=>b.classList.remove('on')); btn.classList.add('on'); }
-    const sorted = [..._vdata].sort((a,b)=>{
-        if(field==='create_time') return (b.create_time||'').localeCompare(a.create_time||'');
-        if(field==='gmv_calc') return calcGmv(b.id)-calcGmv(a.id);
-        return (b[field]||0)-(a[field]||0);
-    });
-    renderVcards(sorted);
-}
-
-/* ── Live table ── */
-let _ldata = [];
-function renderLive(lives) {
-    _ldata = lives;
-    document.getElementById('liveTbody').innerHTML = lives.map(l=>`<tr>
-        <td>
-            <span class="live-tag">LIVE</span>&nbsp;
-            <span style="font-weight:500">${l.title}</span>
-            <div style="font-size:10px;color:var(--t2);margin-top:2px">${l.date} ${l.start_time||''} · ${l.duration||''}</div>
-        </td>
-        <td><span class="acct-tag">${l.account||'@sunny_looove'}</span></td>
-        <td class="metric">${fmt(l.total_viewers)}</td>
-        <td class="metric tg">${l.gmv?'$'+parseFloat(l.gmv).toFixed(2):'—'}</td>
-        <td class="metric">${l.ctr||'—'}</td>
-        <td class="metric">${fmt(l.product_views)}</td>
-        <td class="metric">${fmt(l.product_clicks)}</td>
-        <td class="metric">${l.ctor||'—'}</td>
-        <td class="tm">${l.avg_watch||'—'}</td>
-        <td class="metric tc">+${l.new_followers||0}</td>
-        <td class="metric">${fmt(l.likes||0)}</td>
-        <td class="metric">${fmt(l.comments||0)}</td>
-    </tr>`).join('');
-}
-function sortL(field, btn) {
-    if(btn){ document.querySelectorAll('#tab-live .sbtn').forEach(b=>b.classList.remove('on')); btn.classList.add('on'); }
-    const sorted = [..._ldata].sort((a,b)=>(b[field]||0)-(a[field]||0));
-    renderLive(sorted);
-}
-
-/* ── Revenue ── */
-function renderRevenue() {
-    const sales = loadSales();
-    const vByDay={}, lByDay={};
-    let vtot=0, ltot=0;
-
-    DASHBOARD_DATA.videos.forEach(v=>{
-        const qty=parseFloat(sales[v.id+'_qty']||0);
-        const price=parseFloat(sales[v.id+'_price']||0);
-        const g=qty&&price?qty*price:0;
-        vtot+=g;
-        const d=v.create_time;
-        vByDay[d]=(vByDay[d]||0)+g;
-    });
-    DASHBOARD_DATA.lives.forEach(l=>{
-        const g=parseFloat(l.gmv||0);
-        ltot+=g;
-        lByDay[l.date]=(lByDay[l.date]||0)+g;
-    });
-
-    document.getElementById('revV').textContent='$'+vtot.toFixed(2);
-    document.getElementById('revL').textContent='$'+ltot.toFixed(2);
-    document.getElementById('revT').textContent='$'+(vtot+ltot).toFixed(2);
-
-    const dates=[...new Set([...Object.keys(vByDay),...Object.keys(lByDay)])].sort();
-    document.getElementById('revTbody').innerHTML=dates.map(d=>{
-        const vg=vByDay[d]||0, lg=lByDay[d]||0, tot=vg+lg;
-        return `<tr>
-            <td class="tm">${d}</td>
-            <td class="metric tc">${vg>0?'$'+vg.toFixed(2):'—'}</td>
-            <td class="metric tg">${lg>0?'$'+lg.toFixed(2):'—'}</td>
-            <td class="metric tr" style="font-weight:700">${tot>0?'$'+tot.toFixed(2):'—'}</td>
-        </tr>`;
-    }).join('');
-
-    const ctx=document.getElementById('revChart');
-    if(!ctx) return;
-    if(ctx._ci) ctx._ci.destroy();
-    ctx._ci=new Chart(ctx,{
-        type:'bar',
-        data:{
-            labels:dates,
-            datasets:[
-                {label:'视频 GMV',data:dates.map(d=>vByDay[d]||0),backgroundColor:'rgba(105,201,208,.7)',borderRadius:4},
-                {label:'直播 GMV',data:dates.map(d=>lByDay[d]||0),backgroundColor:'rgba(254,44,85,.7)',borderRadius:4}
-            ]
-        },
-        options:{
-            responsive:true,maintainAspectRatio:false,
-            plugins:{legend:{labels:{color:'#666',font:{size:11}}}},
-            scales:{
-                x:{stacked:true,grid:{color:'#1e1e1e'},ticks:{color:'#555'}},
-                y:{stacked:true,grid:{color:'#1e1e1e'},ticks:{color:'#555',callback:v=>'$'+v}}
-            }
-        }
-    });
-}
-
-/* ── Tab switching ── */
 function switchTab(name, el) {
-    document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
-    document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
-    if(el) el.classList.add('active');
-    document.getElementById('tab-'+name).classList.add('active');
-    if(name==='revenue') renderRevenue();
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('tab-' + name).classList.add('active');
 }
 
-/* ── Init ── */
-(function(){
-    const d=DASHBOARD_DATA;
-    renderOv(d);
-    renderVcards([...d.videos].sort((a,b)=>b.view_count-a.view_count));
-    renderLive([...d.lives].sort((a,b)=>(b.gmv||0)-(a.gmv||0)));
-})();
+function calcGmv(vid) {
+  const qty = parseFloat(document.getElementById('qty-' + vid)?.value) || 0;
+  const price = parseFloat(document.getElementById('price-' + vid)?.value) || 0;
+  const gmv = qty * price;
+  const el = document.getElementById('gmv-' + vid);
+  if (el) el.textContent = '$' + gmv.toFixed(2);
+  updateTotals();
+}
+
+function saveSales(vid) {
+  const qty = document.getElementById('qty-' + vid)?.value || '0';
+  const price = document.getElementById('price-' + vid)?.value || '0';
+  localStorage.setItem(vid + '_qty', qty);
+  localStorage.setItem(vid + '_price', price);
+  const tip = document.getElementById('tip-' + vid);
+  if (tip) { tip.textContent = '✓ 已保存'; setTimeout(() => tip.textContent = '', 2000); }
+  updateTotals();
+}
+
+function loadSaved() {
+  VIDEOS.forEach(v => {
+    const qty = localStorage.getItem(v.id + '_qty');
+    const price = localStorage.getItem(v.id + '_price');
+    if (qty) { const el = document.getElementById('qty-' + v.id); if(el) el.value = qty; }
+    if (price) { const el = document.getElementById('price-' + v.id); if(el) el.value = price; }
+    if (qty || price) calcGmv(v.id);
+  });
+}
+
+function updateTotals() {
+  let totalGmv = 0;
+  VIDEOS.forEach(v => {
+    const qty = parseFloat(document.getElementById('qty-' + v.id)?.value) || 0;
+    const price = parseFloat(document.getElementById('price-' + v.id)?.value) || 0;
+    totalGmv += qty * price;
+  });
+  const g = '$' + totalGmv.toFixed(2);
+  document.getElementById('total-video-gmv').textContent = g;
+  document.getElementById('rev-video').textContent = g;
+  document.getElementById('rev-total').textContent = '$' + (totalGmv + 307.03).toFixed(2);
+}
+
+function sortV(by, btn) {
+  document.querySelectorAll('.sort-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  let sorted = [...VIDEOS];
+  if (by === 'views') sorted.sort((a,b) => b.view_count - a.view_count);
+  else if (by === 'completion') sorted.sort((a,b) => parseFloat(b.completion||0) - parseFloat(a.completion||0));
+  else if (by === 'us') sorted.sort((a,b) => {
+    const pct = v => v.us_pct && v.us_pct.includes('%') && !v.us_pct.includes('<') ? parseFloat(v.us_pct) : 0;
+    return pct(b) - pct(a);
+  });
+  else if (by === 'gmv') sorted.sort((a,b) => {
+    const g = v => (parseFloat(localStorage.getItem(v.id+'_qty')||0)) * (parseFloat(localStorage.getItem(v.id+'_price')||0));
+    return g(b) - g(a);
+  });
+  else sorted.sort((a,b) => {
+    const d = v => v.pub_date.split('/').map(Number);
+    const [ay,am,ad] = d(a); const [by2,bm,bd] = d(b);
+    return (by2*400+bm*32+bd) - (ay*400+am*32+ad);
+  });
+  const grid = document.getElementById('vcards');
+  sorted.forEach(v => {
+    const card = document.getElementById('card-' + v.id);
+    if (card) grid.appendChild(card);
+  });
+}
+
+// Init stats
+function initStats() {
+  const tv = VIDEOS.reduce((s,v)=>s+v.view_count,0);
+  const tl = VIDEOS.reduce((s,v)=>s+v.like_count,0);
+  const tc = VIDEOS.reduce((s,v)=>s+v.comment_count,0);
+  const tf = VIDEOS.reduce((s,v)=>s+v.new_followers,0);
+  document.getElementById('total-views').textContent = tv >= 1000 ? (tv/1000).toFixed(1)+'K' : tv;
+  document.getElementById('total-likes').textContent = tl;
+  document.getElementById('total-comments').textContent = tc;
+  document.getElementById('total-followers').textContent = tf;
+}
+
+window.onload = () => { loadSaved(); initStats(); };
 </script>
 </body>
 </html>
