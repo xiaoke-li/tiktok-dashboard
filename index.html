@@ -7,189 +7,225 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
     <style>
         :root {
-            --bg-primary: #0a0a0a;
-            --bg-card: #161616;
-            --bg-hover: #1e1e1e;
-            --accent-red: #fe2c55;
-            --accent-cyan: #69c9d0;
-            --text-primary: #ffffff;
-            --text-secondary: #8a8a8a;
-            --text-muted: #555555;
-            --border: #2a2a2a;
-            --success: #25f4ee;
-            --warning: #ffca3a;
+            --bg: #0a0a0a; --card: #141414; --card2: #1a1a1a;
+            --red: #fe2c55; --cyan: #69c9d0; --green: #25f4ee;
+            --yellow: #ffca3a; --border: #2a2a2a;
+            --t1: #fff; --t2: #8a8a8a; --t3: #444;
         }
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', sans-serif; background: var(--bg-primary); color: var(--text-primary); min-height: 100vh; }
-        .header { background: linear-gradient(135deg, #0f0f0f 0%, #1a080f 100%); border-bottom: 1px solid var(--border); padding: 14px 32px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; }
-        .header-left { display: flex; align-items: center; gap: 16px; }
-        .logo { display: flex; align-items: center; gap: 10px; font-size: 18px; font-weight: 700; }
-        .logo-icon { width: 34px; height: 34px; background: var(--accent-red); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 18px; }
-        .account-chip { background: var(--bg-card); border: 1px solid var(--border); border-radius: 20px; padding: 4px 14px; font-size: 13px; color: var(--text-secondary); }
-        .header-right { display: flex; align-items: center; gap: 16px; }
-        .last-updated { color: var(--text-muted); font-size: 13px; }
-        .btn-refresh { background: var(--accent-red); color: white; border: none; border-radius: 8px; padding: 8px 18px; font-size: 13px; cursor: pointer; transition: opacity 0.2s; }
-        .btn-refresh:hover { opacity: 0.8; }
-        .main { padding: 28px 32px; max-width: 1600px; margin: 0 auto; }
-        .overview-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px; margin-bottom: 28px; }
-        .stat-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 20px 18px; transition: border-color 0.2s, transform 0.2s; cursor: default; }
-        .stat-card:hover { border-color: var(--accent-red); transform: translateY(-2px); }
-        .stat-label { font-size: 11px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 10px; }
-        .stat-value { font-size: 30px; font-weight: 700; margin-bottom: 8px; line-height: 1; }
-        .stat-sub { font-size: 12px; color: var(--text-secondary); }
-        .stat-sub.up { color: var(--success); }
-        .tabs { display: flex; gap: 0; border-bottom: 1px solid var(--border); margin-bottom: 24px; }
-        .tab { padding: 11px 22px; font-size: 14px; font-weight: 500; color: var(--text-secondary); cursor: pointer; border-bottom: 2px solid transparent; transition: all 0.2s; }
-        .tab:hover { color: var(--text-primary); }
-        .tab.active { color: var(--text-primary); border-bottom-color: var(--accent-red); }
-        .tab-content { display: none; }
-        .tab-content.active { display: block; }
-        .card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; margin-bottom: 20px; }
-        .card-header { padding: 16px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
-        .card-header h3 { font-size: 15px; font-weight: 600; }
-        .card-body { padding: 20px; }
-        .chart-container { position: relative; height: 260px; }
-        .sort-btns { display: flex; gap: 6px; }
-        .sort-btn { background: #222; border: 1px solid var(--border); color: var(--text-secondary); border-radius: 6px; padding: 5px 11px; font-size: 12px; cursor: pointer; transition: all 0.15s; }
-        .sort-btn:hover { border-color: var(--accent-red); color: white; }
-        .sort-btn.active { background: var(--accent-red); border-color: var(--accent-red); color: white; }
-        .table-wrap { overflow-x: auto; }
-        table { width: 100%; border-collapse: collapse; }
-        thead th { text-align: left; padding: 11px 16px; font-size: 11px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid var(--border); cursor: pointer; white-space: nowrap; }
-        thead th:hover { color: var(--text-primary); }
-        tbody tr { border-bottom: 1px solid var(--border); transition: background 0.12s; }
-        tbody tr:last-child { border-bottom: none; }
-        tbody tr:hover { background: var(--bg-hover); }
-        td { padding: 13px 16px; font-size: 13px; vertical-align: middle; }
-        .video-cell { display: flex; align-items: center; gap: 12px; }
-        .video-thumb { width: 46px; height: 46px; border-radius: 6px; background: #222; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; }
-        .video-info .vtitle { font-weight: 500; max-width: 260px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-bottom: 4px; }
-        .video-info .vdate { font-size: 11px; color: var(--text-secondary); }
-        .metric { font-weight: 600; }
-        .text-cyan { color: var(--accent-cyan); }
-        .text-red { color: var(--accent-red); }
-        .text-green { color: var(--success); }
-        .text-muted { color: var(--text-secondary); }
-        .eng-badge { display: inline-block; padding: 3px 9px; border-radius: 12px; font-size: 12px; font-weight: 600; }
-        .eng-high { background: rgba(37,244,238,.15); color: var(--success); }
-        .eng-mid  { background: rgba(255,202,58,.15); color: var(--warning); }
-        .eng-low  { background: rgba(254,44,85,.15); color: var(--accent-red); }
-        .live-tag { display: inline-block; background: rgba(254,44,85,.2); color: var(--accent-red); border: 1px solid rgba(254,44,85,.35); border-radius: 4px; padding: 2px 8px; font-size: 10px; font-weight: 700; letter-spacing: 0.5px; }
-        .acct-tag { display: inline-block; background: rgba(105,201,208,.15); color: var(--accent-cyan); border: 1px solid rgba(105,201,208,.3); border-radius: 4px; padding: 2px 8px; font-size: 11px; font-weight: 600; }
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC',sans-serif; background:var(--bg); color:var(--t1); min-height:100vh; }
 
-        /* GMV input */
-        .gmv-cell { display: flex; align-items: center; gap: 6px; min-width: 110px; }
-        .gmv-input {
-            background: transparent; border: 1px solid var(--border);
-            border-radius: 6px; color: var(--success);
-            font-size: 13px; font-weight: 600;
-            padding: 4px 8px; width: 80px;
-            outline: none; transition: border-color 0.2s;
+        /* Header */
+        .hdr { background:linear-gradient(135deg,#0f0f0f,#1a080f); border-bottom:1px solid var(--border); padding:13px 28px; display:flex; align-items:center; justify-content:space-between; position:sticky; top:0; z-index:100; }
+        .logo { display:flex; align-items:center; gap:10px; font-size:17px; font-weight:700; }
+        .logo-icon { width:32px; height:32px; background:var(--red); border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:17px; }
+        .chip { background:var(--card); border:1px solid var(--border); border-radius:20px; padding:3px 13px; font-size:12px; color:var(--t2); }
+        .hdr-r { display:flex; align-items:center; gap:14px; }
+        .upd { color:var(--t3); font-size:12px; }
+        .btn-ref { background:var(--red); color:#fff; border:none; border-radius:7px; padding:7px 16px; font-size:12px; cursor:pointer; }
+        .btn-ref:hover { opacity:.8; }
+
+        /* Layout */
+        .main { padding:24px 28px; max-width:1600px; margin:0 auto; }
+
+        /* Overview */
+        .ov-grid { display:grid; grid-template-columns:repeat(5,1fr); gap:12px; margin-bottom:24px; }
+        .ov-card { background:var(--card); border:1px solid var(--border); border-radius:11px; padding:18px 16px; }
+        .ov-label { font-size:10px; color:var(--t2); text-transform:uppercase; letter-spacing:.6px; margin-bottom:8px; }
+        .ov-val { font-size:26px; font-weight:700; margin-bottom:4px; }
+        .ov-sub { font-size:11px; color:var(--t2); }
+
+        /* Tabs */
+        .tabs { display:flex; border-bottom:1px solid var(--border); margin-bottom:22px; }
+        .tab { padding:10px 20px; font-size:13px; font-weight:500; color:var(--t2); cursor:pointer; border-bottom:2px solid transparent; transition:all .2s; }
+        .tab:hover { color:var(--t1); }
+        .tab.active { color:var(--t1); border-bottom-color:var(--red); }
+        .tab-content { display:none; }
+        .tab-content.active { display:block; }
+
+        /* ── VIDEO CARDS ── */
+        .vc-toolbar { display:flex; align-items:center; justify-content:space-between; margin-bottom:18px; }
+        .vc-toolbar h3 { font-size:14px; font-weight:600; }
+        .sort-btns { display:flex; gap:6px; }
+        .sbtn { background:#1e1e1e; border:1px solid var(--border); color:var(--t2); border-radius:6px; padding:5px 11px; font-size:11px; cursor:pointer; transition:all .15s; }
+        .sbtn:hover { border-color:var(--red); color:#fff; }
+        .sbtn.on { background:var(--red); border-color:var(--red); color:#fff; }
+
+        .vcard-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(340px,1fr)); gap:16px; }
+
+        .vcard {
+            background:var(--card);
+            border:1px solid var(--border);
+            border-radius:14px;
+            overflow:hidden;
+            transition:border-color .2s, transform .2s;
         }
-        .gmv-input:focus { border-color: var(--success); background: rgba(37,244,238,.05); }
-        .gmv-input::placeholder { color: var(--text-muted); font-weight: 400; }
-        .gmv-save-btn {
-            background: none; border: none; color: var(--text-muted);
-            cursor: pointer; font-size: 15px; padding: 2px 4px;
-            transition: color 0.15s;
+        .vcard:hover { border-color:var(--red); transform:translateY(-2px); }
+
+        /* Thumbnail */
+        .vcard-thumb {
+            width:100%; height:160px;
+            background:linear-gradient(135deg,#1a1a1a,#0f0f0f);
+            display:flex; flex-direction:column; align-items:center; justify-content:center;
+            position:relative; overflow:hidden; border-bottom:1px solid var(--border);
         }
-        .gmv-save-btn:hover { color: var(--success); }
-        .gmv-saved { color: var(--success); font-size: 11px; opacity: 0; transition: opacity 0.3s; }
-        .gmv-saved.show { opacity: 1; }
+        .vcard-thumb .play { font-size:36px; opacity:.4; }
+        .vcard-thumb .vdate-badge {
+            position:absolute; top:10px; right:10px;
+            background:rgba(0,0,0,.7); border:1px solid var(--border);
+            border-radius:6px; padding:3px 8px; font-size:11px; color:var(--t2);
+        }
+        .vcard-thumb .viral-badge {
+            position:absolute; top:10px; left:10px;
+            background:rgba(254,44,85,.85); border-radius:6px;
+            padding:3px 9px; font-size:10px; font-weight:700; color:#fff; letter-spacing:.5px;
+        }
+
+        /* Body */
+        .vcard-body { padding:14px 16px; }
+        .vcard-title {
+            font-size:13px; font-weight:600; line-height:1.4;
+            display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical;
+            overflow:hidden; margin-bottom:14px; color:var(--t1);
+        }
+
+        /* Metric grid inside card */
+        .vcard-metrics { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-bottom:14px; }
+        .vm { background:var(--card2); border-radius:8px; padding:9px 10px; }
+        .vm-label { font-size:9px; color:var(--t2); text-transform:uppercase; letter-spacing:.4px; margin-bottom:4px; }
+        .vm-val { font-size:16px; font-weight:700; }
+        .vm-val.red { color:var(--red); }
+        .vm-val.cyan { color:var(--cyan); }
+        .vm-val.green { color:var(--green); }
+        .vm-val.yellow { color:var(--yellow); }
+
+        /* Traffic row */
+        .vcard-traffic { display:flex; gap:8px; margin-bottom:14px; }
+        .traffic-pill {
+            flex:1; background:var(--card2); border-radius:8px; padding:8px 10px; text-align:center;
+        }
+        .traffic-pill .tp-label { font-size:9px; color:var(--t2); margin-bottom:3px; }
+        .traffic-pill .tp-val { font-size:14px; font-weight:700; }
+
+        /* Divider */
+        .vcard-divider { border:none; border-top:1px solid var(--border); margin:0 0 14px; }
+
+        /* Manual inputs */
+        .vcard-inputs { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:10px; }
+        .inp-group { background:var(--card2); border-radius:8px; padding:9px 10px; }
+        .inp-label { font-size:9px; color:var(--t2); text-transform:uppercase; letter-spacing:.4px; margin-bottom:5px; }
+        .inp-field {
+            width:100%; background:transparent; border:none; border-bottom:1px solid var(--border);
+            color:var(--t1); font-size:15px; font-weight:600; outline:none;
+            padding:2px 0; transition:border-color .2s;
+        }
+        .inp-field:focus { border-bottom-color:var(--cyan); }
+        .inp-field::placeholder { color:var(--t3); font-weight:400; font-size:13px; }
+
+        /* GMV result */
+        .vcard-gmv {
+            display:flex; align-items:center; justify-content:space-between;
+            background:linear-gradient(135deg,rgba(37,244,238,.08),rgba(37,244,238,.03));
+            border:1px solid rgba(37,244,238,.2); border-radius:8px; padding:10px 14px;
+        }
+        .gmv-label { font-size:11px; color:var(--t2); }
+        .gmv-amount { font-size:20px; font-weight:700; color:var(--green); }
+        .gmv-save { background:none; border:1px solid var(--border); color:var(--t2); border-radius:6px; padding:4px 10px; font-size:11px; cursor:pointer; transition:all .15s; margin-left:10px; }
+        .gmv-save:hover { border-color:var(--green); color:var(--green); }
+
+        /* ── LIVE TAB ── */
+        .card { background:var(--card); border:1px solid var(--border); border-radius:12px; overflow:hidden; margin-bottom:18px; }
+        .card-hdr { padding:14px 18px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; }
+        .card-hdr h3 { font-size:14px; font-weight:600; }
+        .table-wrap { overflow-x:auto; }
+        table { width:100%; border-collapse:collapse; }
+        thead th { text-align:left; padding:10px 14px; font-size:10px; color:var(--t2); text-transform:uppercase; letter-spacing:.5px; border-bottom:1px solid var(--border); white-space:nowrap; cursor:pointer; }
+        thead th:hover { color:var(--t1); }
+        tbody tr { border-bottom:1px solid var(--border); transition:background .12s; }
+        tbody tr:last-child { border-bottom:none; }
+        tbody tr:hover { background:#1c1c1c; }
+        td { padding:12px 14px; font-size:12px; vertical-align:middle; }
+        .live-tag { display:inline-block; background:rgba(254,44,85,.18); color:var(--red); border:1px solid rgba(254,44,85,.3); border-radius:4px; padding:2px 7px; font-size:9px; font-weight:700; }
+        .acct-tag { display:inline-block; background:rgba(105,201,208,.12); color:var(--cyan); border:1px solid rgba(105,201,208,.25); border-radius:4px; padding:2px 7px; font-size:10px; font-weight:600; }
+        .metric { font-weight:600; }
+        .tc { color:var(--cyan); } .tr { color:var(--red); } .tg { color:var(--green); } .ty { color:var(--yellow); } .tm { color:var(--t2); }
 
         /* Revenue tab */
-        .rev-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 20px; }
-        .rev-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 24px; }
-        .rev-card.hl { border-color: rgba(254,44,85,.5); background: linear-gradient(135deg,#1a0810,#161616); }
-        .rev-label { font-size: 13px; color: var(--text-secondary); margin-bottom: 12px; }
-        .rev-amount { font-size: 36px; font-weight: 700; color: var(--accent-cyan); }
-        .rev-amount.total { color: var(--accent-red); }
-        .rev-sub { margin-top: 8px; font-size: 12px; color: var(--text-secondary); }
+        .rev-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin-bottom:18px; }
+        .rev-card { background:var(--card); border:1px solid var(--border); border-radius:12px; padding:22px; }
+        .rev-card.hl { border-color:rgba(254,44,85,.4); background:linear-gradient(135deg,#1a0810,#141414); }
+        .rev-lbl { font-size:12px; color:var(--t2); margin-bottom:10px; }
+        .rev-amt { font-size:32px; font-weight:700; color:var(--cyan); }
+        .rev-amt.tot { color:var(--red); }
+        .rev-sub { margin-top:6px; font-size:11px; color:var(--t2); }
+        .chart-box { position:relative; height:250px; }
+        .card-body { padding:18px; }
 
-        .footer { text-align: center; padding: 24px; color: var(--text-muted); font-size: 12px; border-top: 1px solid var(--border); margin-top: 16px; }
-        @media (max-width: 1200px) { .overview-grid { grid-template-columns: repeat(3, 1fr); } }
-        @media (max-width: 768px) { .main { padding: 16px; } .header { padding: 12px 16px; } .overview-grid { grid-template-columns: repeat(2, 1fr); } .rev-grid { grid-template-columns: 1fr; } }
+        .footer { text-align:center; padding:22px; color:var(--t3); font-size:11px; border-top:1px solid var(--border); margin-top:12px; }
+
+        @media(max-width:900px) { .ov-grid{grid-template-columns:repeat(3,1fr);} .vcard-grid{grid-template-columns:1fr;} .rev-grid{grid-template-columns:1fr;} }
+        @media(max-width:600px) { .main{padding:14px;} .hdr{padding:10px 14px;} .ov-grid{grid-template-columns:repeat(2,1fr);} }
     </style>
 </head>
 <body>
-
-<div class="header">
-    <div class="header-left">
+<div class="hdr">
+    <div style="display:flex;align-items:center;gap:14px">
         <div class="logo"><div class="logo-icon">♪</div><span>TikTok Dashboard</span></div>
-        <div class="account-chip" id="accountChip">@loading...</div>
+        <div class="chip" id="accountChip">@loading...</div>
     </div>
-    <div class="header-right">
-        <span class="last-updated">最后更新：<span id="lastUpdated">—</span></span>
-        <button class="btn-refresh" onclick="location.reload()">↻ 刷新</button>
+    <div class="hdr-r">
+        <span class="upd">更新：<span id="lastUpdated">—</span></span>
+        <button class="btn-ref" onclick="location.reload()">↻ 刷新</button>
     </div>
 </div>
 
 <div class="main">
-    <div id="overviewGrid" class="overview-grid"></div>
+    <div id="ovGrid" class="ov-grid"></div>
 
     <div class="tabs">
-        <div class="tab active" onclick="switchTab('content',this)">📹 视频内容</div>
+        <div class="tab active" onclick="switchTab('content',this)">📹 短视频内容</div>
         <div class="tab"        onclick="switchTab('live',this)">🔴 直播数据</div>
         <div class="tab"        onclick="switchTab('revenue',this)">💰 收益数据</div>
     </div>
 
-    <!-- 视频内容 tab -->
+    <!-- 短视频 tab -->
     <div class="tab-content active" id="tab-content">
-        <div class="card">
-            <div class="card-header">
-                <h3>视频数据明细</h3>
-                <div class="sort-btns">
-                    <button class="sort-btn active" onclick="sortVideos('view_count',this)">按播放量</button>
-                    <button class="sort-btn" onclick="sortVideos('like_count',this)">按点赞</button>
-                    <button class="sort-btn" onclick="sortVideos('create_time',this)">按时间</button>
-                    <button class="sort-btn" onclick="sortVideos('engagement',this)">按互动率</button>
-                </div>
-            </div>
-            <div class="table-wrap">
-                <table>
-                    <thead><tr>
-                        <th>视频</th>
-                        <th onclick="sortVideos('view_count',null)">播放量 ↕</th>
-                        <th onclick="sortVideos('like_count',null)">点赞 ↕</th>
-                        <th onclick="sortVideos('comment_count',null)">评论 ↕</th>
-                        <th onclick="sortVideos('share_count',null)">分享 ↕</th>
-                        <th>完播率</th>
-                        <th>均观看时长</th>
-                        <th>互动率</th>
-                        <th>GMV ($)</th>
-                    </tr></thead>
-                    <tbody id="videoTbody"></tbody>
-                </table>
+        <div class="vc-toolbar">
+            <h3>视频数据明细（共 <span id="vcCount">0</span> 条）</h3>
+            <div class="sort-btns">
+                <button class="sbtn on"  onclick="sortV('view_count',this)">播放量</button>
+                <button class="sbtn"     onclick="sortV('like_count',this)">点赞</button>
+                <button class="sbtn"     onclick="sortV('create_time',this)">时间</button>
+                <button class="sbtn"     onclick="sortV('gmv_calc',this)">GMV</button>
             </div>
         </div>
+        <div class="vcard-grid" id="vcardGrid"></div>
     </div>
 
-    <!-- 直播数据 tab -->
+    <!-- 直播 tab -->
     <div class="tab-content" id="tab-live">
         <div class="card">
-            <div class="card-header">
+            <div class="card-hdr">
                 <h3>直播场次明细</h3>
                 <div class="sort-btns">
-                    <button class="sort-btn active" onclick="sortLives('gmv',this)">按 GMV</button>
-                    <button class="sort-btn" onclick="sortLives('total_viewers',this)">按观看数</button>
-                    <button class="sort-btn" onclick="sortLives('new_followers',this)">按新粉</button>
+                    <button class="sbtn on" onclick="sortL('gmv',this)">GMV</button>
+                    <button class="sbtn"    onclick="sortL('total_viewers',this)">观看数</button>
+                    <button class="sbtn"    onclick="sortL('new_followers',this)">新粉</button>
                 </div>
             </div>
             <div class="table-wrap">
                 <table>
                     <thead><tr>
-                        <th>直播场次</th>
-                        <th>账号</th>
-                        <th onclick="sortLives('total_viewers',null)">观看数 ↕</th>
-                        <th onclick="sortLives('gmv',null)">GMV ↕</th>
+                        <th>直播场次</th><th>账号</th>
+                        <th onclick="sortL('total_viewers',null)">观看数 ↕</th>
+                        <th onclick="sortL('gmv',null)">GMV ↕</th>
                         <th>CTR</th>
-                        <th onclick="sortLives('product_views',null)">商品浏览 ↕</th>
-                        <th onclick="sortLives('product_clicks',null)">商品点击 ↕</th>
-                        <th>CTOR</th>
-                        <th>人均观看</th>
-                        <th onclick="sortLives('new_followers',null)">新粉 ↕</th>
-                        <th onclick="sortLives('likes',null)">点赞 ↕</th>
-                        <th onclick="sortLives('comments',null)">评论 ↕</th>
+                        <th onclick="sortL('product_views',null)">商品浏览 ↕</th>
+                        <th onclick="sortL('product_clicks',null)">商品点击 ↕</th>
+                        <th>CTOR</th><th>人均观看</th>
+                        <th onclick="sortL('new_followers',null)">新粉 ↕</th>
+                        <th onclick="sortL('likes',null)">点赞 ↕</th>
+                        <th onclick="sortL('comments',null)">评论 ↕</th>
                     </tr></thead>
                     <tbody id="liveTbody"></tbody>
                 </table>
@@ -197,627 +233,653 @@
         </div>
     </div>
 
-    <!-- 收益数据 tab -->
+    <!-- 收益 tab -->
     <div class="tab-content" id="tab-revenue">
         <div class="rev-grid">
             <div class="rev-card">
-                <div class="rev-label">📹 视频 GMV 合计</div>
-                <div class="rev-amount" id="revVideoGMV">$0</div>
-                <div class="rev-sub">已手动录入视频 GMV</div>
+                <div class="rev-lbl">📹 视频 GMV（自动计算）</div>
+                <div class="rev-amt" id="revV">$0.00</div>
+                <div class="rev-sub">动销数量 × 客单价 合计</div>
             </div>
             <div class="rev-card">
-                <div class="rev-label">🔴 直播 GMV 合计</div>
-                <div class="rev-amount" id="revLiveGMV">$0</div>
+                <div class="rev-lbl">🔴 直播 GMV</div>
+                <div class="rev-amt" id="revL">$0.00</div>
                 <div class="rev-sub">本批直播数据</div>
             </div>
             <div class="rev-card hl">
-                <div class="rev-label">💰 总 GMV</div>
-                <div class="rev-amount total" id="revTotal">$0</div>
+                <div class="rev-lbl">💰 总 GMV</div>
+                <div class="rev-amt tot" id="revT">$0.00</div>
                 <div class="rev-sub">视频 + 直播合计</div>
             </div>
         </div>
         <div class="card">
-            <div class="card-header"><h3>每日 GMV 汇总（视频 + 直播）</h3></div>
-            <div class="card-body">
-                <div class="chart-container"><canvas id="revenueChart"></canvas></div>
-            </div>
+            <div class="card-hdr"><h3>每日 GMV 汇总</h3></div>
+            <div class="card-body"><div class="chart-box"><canvas id="revChart"></canvas></div></div>
         </div>
         <div class="card">
-            <div class="card-header"><h3>每日收益明细</h3></div>
+            <div class="card-hdr"><h3>每日明细</h3></div>
             <div class="table-wrap">
                 <table>
-                    <thead><tr>
-                        <th>日期</th>
-                        <th>视频 GMV</th>
-                        <th>直播 GMV</th>
-                        <th>当日合计</th>
-                    </tr></thead>
+                    <thead><tr><th>日期</th><th>视频 GMV</th><th>直播 GMV</th><th>合计</th></tr></thead>
                     <tbody id="revTbody"></tbody>
                 </table>
             </div>
         </div>
     </div>
 </div>
-
-<div class="footer">数据来源：TikTok Studio &amp; Shop &nbsp;|&nbsp; 每日定时更新 &nbsp;|&nbsp; @sunny_looove</div>
+<div class="footer">数据来源：TikTok Studio & Shop &nbsp;|&nbsp; @sunny_looove</div>
 
 <script>
-// ============================================================
-// DASHBOARD_DATA — 每日自动替换此对象
-// ============================================================
 const DASHBOARD_DATA = {
-    "user": {
-        "name": "@sunny_looove",
-        "followers": 0,
-        "following": 0,
-        "total_likes": 59,
-        "video_count": 10
+  "user": {
+    "name": "@sunny_looove",
+    "followers": 0,
+    "following": 0,
+    "total_likes": 59,
+    "video_count": 10
+  },
+  "lastUpdated": "2026-03-20",
+  "overview": {
+    "totalViews": 6400,
+    "totalLikes": 59,
+    "totalComments": 3,
+    "totalShares": 8,
+    "avgEngagement": 1.09
+  },
+  "videos": [
+    {
+      "id": "7618917103462059277",
+      "title": "everyone wanted it-it's back.#naturalhairtiktok #humanhair #wigtok #blackbeauty #BlackGirlMagic",
+      "create_time": "2026/3/20",
+      "view_count": 238,
+      "like_count": 3,
+      "comment_count": 0,
+      "share_count": 0,
+      "save_count": 1,
+      "duration": 0,
+      "avg_watch": "4.76s",
+      "completion": "18.9%",
+      "total_watch": "0h:22m:30s",
+      "new_followers": 0,
+      "gmv": "",
+      "traffic": {
+        "推荐": "96.3%",
+        "个人资料": "3.7%",
+        "已关注": "<0.1%",
+        "搜索": "<0.1%",
+        "私信": "<0.1%",
+        "音乐": "<0.1%",
+        "其它": "<0.1%"
+      }
     },
-    "lastUpdated": "2026-03-20",
-    "overview": {
-        "totalViews": 6400,
-        "totalLikes": 59,
-        "totalComments": 3,
-        "totalShares": 8,
-        "avgEngagement": 1.09
+    {
+      "id": "7618916423007522061",
+      "title": "Back in stock-but not for long.#naturalhairtiktok #wigtok #humanhair #BlackGirlMagic #blackbeauty #Bobwig",
+      "create_time": "2026/3/19",
+      "view_count": 281,
+      "like_count": 3,
+      "comment_count": 0,
+      "share_count": 0,
+      "save_count": 2,
+      "duration": 0,
+      "avg_watch": "4.13s",
+      "completion": "6.6%",
+      "total_watch": "0h:22m:23s",
+      "new_followers": 0,
+      "gmv": "",
+      "traffic": {
+        "推荐": "96.2%",
+        "个人资料": "3.5%",
+        "已关注": "<0.1%",
+        "搜索": "0.3%",
+        "私信": "<0.1%",
+        "音乐": "<0.1%",
+        "其它": "<0.1%"
+      }
     },
-    "videos": [
-        {
-            "id": "7618917103462059277",
-            "title": "everyone wanted it-it's back.#naturalhairtiktok #humanhair #wigtok #blackbeauty #BlackGirlMagic",
-            "create_time": "2026/3/20",
-            "view_count": 238,
-            "like_count": 3,
-            "comment_count": 0,
-            "share_count": 0,
-            "save_count": 1,
-            "duration": 0,
-            "avg_watch": "4.76s",
-            "completion": "18.9%",
-            "total_watch": "0h:22m:30s",
-            "new_followers": 0,
-            "gmv": "",
-            "traffic": {
-                "推荐": "96.3%",
-                "个人资料": "3.7%",
-                "已关注": "<0.1%",
-                "搜索": "<0.1%",
-                "私信": "<0.1%",
-                "音乐": "<0.1%",
-                "其它": "<0.1%"
-            }
-        },
-        {
-            "id": "7618916423007522061",
-            "title": "Back in stock-but not for long.#naturalhairtiktok #wigtok #humanhair #BlackGirlMagic #blackbeauty #Bobwig",
-            "create_time": "2026/3/19",
-            "view_count": 281,
-            "like_count": 3,
-            "comment_count": 0,
-            "share_count": 0,
-            "save_count": 2,
-            "duration": 0,
-            "avg_watch": "4.13s",
-            "completion": "6.6%",
-            "total_watch": "0h:22m:23s",
-            "new_followers": 0,
-            "gmv": "",
-            "traffic": {
-                "推荐": "96.2%",
-                "个人资料": "3.5%",
-                "已关注": "<0.1%",
-                "搜索": "0.3%",
-                "私信": "<0.1%",
-                "音乐": "<0.1%",
-                "其它": "<0.1%"
-            }
-        },
-        {
-            "id": "7618915089844047117",
-            "title": "you saw it... now it's back.#naturalhairtiktok #wigtok #humanhair #BlackGirlMagic #Bobwig",
-            "create_time": "2026/3/19",
-            "view_count": 251,
-            "like_count": 2,
-            "comment_count": 0,
-            "share_count": 0,
-            "save_count": 1,
-            "duration": 0,
-            "avg_watch": "3.6s",
-            "completion": "6%",
-            "total_watch": "0h:15m:53s",
-            "new_followers": 0,
-            "gmv": "",
-            "traffic": {
-                "推荐": "96.2%",
-                "个人资料": "3.8%",
-                "已关注": "<0.1%",
-                "搜索": "<0.1%",
-                "私信": "<0.1%",
-                "音乐": "<0.1%",
-                "其它": "<0.1%"
-            }
-        },
-        {
-            "id": "7618914417387900174",
-            "title": "you asked for it...it's finally back#naturalhairtiktok #wigtok #humanhair #BlackGirlMagic #blackbeauty",
-            "create_time": "2026/3/19",
-            "view_count": 288,
-            "like_count": 1,
-            "comment_count": 0,
-            "share_count": 0,
-            "save_count": 1,
-            "duration": 0,
-            "avg_watch": "3.82s",
-            "completion": "6%",
-            "total_watch": "0h:20m:37s",
-            "new_followers": 0,
-            "gmv": "",
-            "traffic": {
-                "推荐": "97.3%",
-                "个人资料": "2.7%",
-                "已关注": "<0.1%",
-                "搜索": "<0.1%",
-                "私信": "<0.1%",
-                "音乐": "<0.1%",
-                "其它": "<0.1%"
-            }
-        },
-        {
-            "id": "7618913626522406157",
-            "title": "It's back...and selling fast.#naturalhairtiktok #wigtok #humanhair #blackbeauty #Bobwig",
-            "create_time": "2026/3/19",
-            "view_count": 291,
-            "like_count": 6,
-            "comment_count": 0,
-            "share_count": 0,
-            "save_count": 1,
-            "duration": 0,
-            "avg_watch": "2.81s",
-            "completion": "3.4%",
-            "total_watch": "0h:14m:20s",
-            "new_followers": 0,
-            "gmv": "",
-            "traffic": {
-                "推荐": "97.3%",
-                "个人资料": "2.7%",
-                "已关注": "<0.1%",
-                "搜索": "<0.1%",
-                "私信": "<0.1%",
-                "音乐": "<0.1%",
-                "其它": "<0.1%"
-            }
-        },
-        {
-            "id": "7618548791829892366",
-            "title": "this wig keeps selling out...#wigtok #naturalhairtiktok #humanhair #BlackGirlMagic #blackbeauty",
-            "create_time": "2026/3/19",
-            "view_count": 294,
-            "like_count": 3,
-            "comment_count": 0,
-            "share_count": 0,
-            "save_count": 2,
-            "duration": 0,
-            "avg_watch": "2.81s",
-            "completion": "5.1%",
-            "total_watch": "0h:15m:39s",
-            "new_followers": 1,
-            "gmv": "",
-            "traffic": {
-                "推荐": "96.5%",
-                "个人资料": "3.5%",
-                "已关注": "<0.1%",
-                "搜索": "<0.1%",
-                "私信": "<0.1%",
-                "音乐": "<0.1%",
-                "其它": "<0.1%"
-            }
-        },
-        {
-            "id": "7618548204023467278",
-            "title": "you missed it last time...it's back again#wigtok #humanhair #naturalhairtiktok #BlackGirlMagic #blackbeauty",
-            "create_time": "2026/3/18",
-            "view_count": 3778,
-            "like_count": 33,
-            "comment_count": 3,
-            "share_count": 6,
-            "save_count": 9,
-            "duration": 0,
-            "avg_watch": "5.41s",
-            "completion": "13.7%",
-            "total_watch": "6h:52m:0s",
-            "new_followers": 3,
-            "gmv": "",
-            "traffic": {
-                "推荐": "99.0%",
-                "个人资料": "0.3%",
-                "已关注": "<0.1%",
-                "搜索": "0.1%",
-                "私信": "0.2%",
-                "音乐": "<0.1%",
-                "其它": "0.4%"
-            }
-        },
-        {
-            "id": "7618550110300933389",
-            "title": "this wig is going crazy right now...#naturalhairtiktok #wigtok #humanhair #blackbeauty #BlackGirlMagic",
-            "create_time": "2026/3/18",
-            "view_count": 289,
-            "like_count": 1,
-            "comment_count": 0,
-            "share_count": 0,
-            "save_count": 1,
-            "duration": 0,
-            "avg_watch": "3.46s",
-            "completion": "11.2%",
-            "total_watch": "0h:18m:15s",
-            "new_followers": 0,
-            "gmv": "",
-            "traffic": {
-                "推荐": "94.8%",
-                "个人资料": "1.6%",
-                "已关注": "<0.1%",
-                "搜索": "<0.1%",
-                "私信": "<0.1%",
-                "音乐": "<0.1%",
-                "其它": "3.6%"
-            }
-        },
-        {
-            "id": "7618408897182747918",
-            "title": "$345 on offline shop... ours is only $33#wigtok #humanhair #naturalhairtiktok #BlackGirlMagic #blackbeauty",
-            "create_time": "2026/3/18",
-            "view_count": 219,
-            "like_count": 2,
-            "comment_count": 0,
-            "share_count": 0,
-            "save_count": 1,
-            "duration": 0,
-            "avg_watch": "3.26s",
-            "completion": "4.5%",
-            "total_watch": "0h:12m:6s",
-            "new_followers": 0,
-            "gmv": "",
-            "traffic": {
-                "推荐": "97.4%",
-                "个人资料": "2.2%",
-                "已关注": "<0.1%",
-                "搜索": "0.4%",
-                "私信": "<0.1%",
-                "音乐": "<0.1%",
-                "其它": "<0.1%"
-            }
-        },
-        {
-            "id": "7618182308675226893",
-            "title": "why does this wig have so many 5-star reviews?#wigtok #humanhair #naturalhairtiktok #BlackGirlMagic #HDLACE #blackbeauty",
-            "create_time": "2026/3/17",
-            "view_count": 471,
-            "like_count": 5,
-            "comment_count": 0,
-            "share_count": 2,
-            "save_count": 2,
-            "duration": 0,
-            "avg_watch": "3.81s",
-            "completion": "6.7%",
-            "total_watch": "0h:34m:51s",
-            "new_followers": 0,
-            "gmv": "",
-            "traffic": {
-                "推荐": "93.4%",
-                "个人资料": "3.0%",
-                "已关注": "<0.1%",
-                "搜索": "0.2%",
-                "私信": "<0.1%",
-                "音乐": "<0.1%",
-                "其它": "3.4%"
-            }
-        }
-    ],
-    "lives": [
-        {
-            "id": "7618833409451789070",
-            "title": "Tana's live flashsale",
-            "date": "2026-03-18",
-            "start_time": "21:26",
-            "duration": "2h19min",
-            "duration_minutes": 139,
-            "total_viewers": 1169,
-            "gmv": 167.59,
-            "ctr": "16.94%",
-            "product_views": 1934,
-            "product_clicks": 198,
-            "ctor": "1.52%",
-            "avg_watch": "26s",
-            "new_followers": 6,
-            "likes": 268,
-            "comments": 49,
-            "gift_revenue": 167.59
-        },
-        {
-            "id": "7618777985805519629",
-            "title": "Tana's wig flashsale!!",
-            "date": "2026-03-18",
-            "start_time": "17:50",
-            "duration": "2h10min",
-            "duration_minutes": 130,
-            "total_viewers": 888,
-            "gmv": 139.44,
-            "ctr": "14.30%",
-            "product_views": 1604,
-            "product_clicks": 127,
-            "ctor": "2.36%",
-            "avg_watch": "22s",
-            "new_followers": 7,
-            "likes": 1,
-            "comments": 25,
-            "gift_revenue": 139.44
-        }
-    ],
-    "revenue": {
-        "creatorFund": 0,
-        "liveGifts": 307.03,
-        "other": 0,
-        "total": 307.03,
-        "monthly": []
+    {
+      "id": "7618915089844047117",
+      "title": "you saw it... now it's back.#naturalhairtiktok #wigtok #humanhair #BlackGirlMagic #Bobwig",
+      "create_time": "2026/3/19",
+      "view_count": 251,
+      "like_count": 2,
+      "comment_count": 0,
+      "share_count": 0,
+      "save_count": 1,
+      "duration": 0,
+      "avg_watch": "3.6s",
+      "completion": "6%",
+      "total_watch": "0h:15m:53s",
+      "new_followers": 0,
+      "gmv": "",
+      "traffic": {
+        "推荐": "96.2%",
+        "个人资料": "3.8%",
+        "已关注": "<0.1%",
+        "搜索": "<0.1%",
+        "私信": "<0.1%",
+        "音乐": "<0.1%",
+        "其它": "<0.1%"
+      }
     },
-    "trend": {
-        "dates": [
-            "3/17",
-            "3/18",
-            "3/19",
-            "3/20"
-        ],
-        "views": [
-            471,
-            4286,
-            1405,
-            238
-        ],
-        "likes": [
-            5,
-            36,
-            15,
-            3
-        ]
+    {
+      "id": "7618914417387900174",
+      "title": "you asked for it...it's finally back#naturalhairtiktok #wigtok #humanhair #BlackGirlMagic #blackbeauty",
+      "create_time": "2026/3/19",
+      "view_count": 288,
+      "like_count": 1,
+      "comment_count": 0,
+      "share_count": 0,
+      "save_count": 1,
+      "duration": 0,
+      "avg_watch": "3.82s",
+      "completion": "6%",
+      "total_watch": "0h:20m:37s",
+      "new_followers": 0,
+      "gmv": "",
+      "traffic": {
+        "推荐": "97.3%",
+        "个人资料": "2.7%",
+        "已关注": "<0.1%",
+        "搜索": "<0.1%",
+        "私信": "<0.1%",
+        "音乐": "<0.1%",
+        "其它": "<0.1%"
+      }
+    },
+    {
+      "id": "7618913626522406157",
+      "title": "It's back...and selling fast.#naturalhairtiktok #wigtok #humanhair #blackbeauty #Bobwig",
+      "create_time": "2026/3/19",
+      "view_count": 291,
+      "like_count": 6,
+      "comment_count": 0,
+      "share_count": 0,
+      "save_count": 1,
+      "duration": 0,
+      "avg_watch": "2.81s",
+      "completion": "3.4%",
+      "total_watch": "0h:14m:20s",
+      "new_followers": 0,
+      "gmv": "",
+      "traffic": {
+        "推荐": "97.3%",
+        "个人资料": "2.7%",
+        "已关注": "<0.1%",
+        "搜索": "<0.1%",
+        "私信": "<0.1%",
+        "音乐": "<0.1%",
+        "其它": "<0.1%"
+      }
+    },
+    {
+      "id": "7618548791829892366",
+      "title": "this wig keeps selling out...#wigtok #naturalhairtiktok #humanhair #BlackGirlMagic #blackbeauty",
+      "create_time": "2026/3/19",
+      "view_count": 294,
+      "like_count": 3,
+      "comment_count": 0,
+      "share_count": 0,
+      "save_count": 2,
+      "duration": 0,
+      "avg_watch": "2.81s",
+      "completion": "5.1%",
+      "total_watch": "0h:15m:39s",
+      "new_followers": 1,
+      "gmv": "",
+      "traffic": {
+        "推荐": "96.5%",
+        "个人资料": "3.5%",
+        "已关注": "<0.1%",
+        "搜索": "<0.1%",
+        "私信": "<0.1%",
+        "音乐": "<0.1%",
+        "其它": "<0.1%"
+      }
+    },
+    {
+      "id": "7618548204023467278",
+      "title": "you missed it last time...it's back again#wigtok #humanhair #naturalhairtiktok #BlackGirlMagic #blackbeauty",
+      "create_time": "2026/3/18",
+      "view_count": 3778,
+      "like_count": 33,
+      "comment_count": 3,
+      "share_count": 6,
+      "save_count": 9,
+      "duration": 0,
+      "avg_watch": "5.41s",
+      "completion": "13.7%",
+      "total_watch": "6h:52m:0s",
+      "new_followers": 3,
+      "gmv": "",
+      "traffic": {
+        "推荐": "99.0%",
+        "个人资料": "0.3%",
+        "已关注": "<0.1%",
+        "搜索": "0.1%",
+        "私信": "0.2%",
+        "音乐": "<0.1%",
+        "其它": "0.4%"
+      }
+    },
+    {
+      "id": "7618550110300933389",
+      "title": "this wig is going crazy right now...#naturalhairtiktok #wigtok #humanhair #blackbeauty #BlackGirlMagic",
+      "create_time": "2026/3/18",
+      "view_count": 289,
+      "like_count": 1,
+      "comment_count": 0,
+      "share_count": 0,
+      "save_count": 1,
+      "duration": 0,
+      "avg_watch": "3.46s",
+      "completion": "11.2%",
+      "total_watch": "0h:18m:15s",
+      "new_followers": 0,
+      "gmv": "",
+      "traffic": {
+        "推荐": "94.8%",
+        "个人资料": "1.6%",
+        "已关注": "<0.1%",
+        "搜索": "<0.1%",
+        "私信": "<0.1%",
+        "音乐": "<0.1%",
+        "其它": "3.6%"
+      }
+    },
+    {
+      "id": "7618408897182747918",
+      "title": "$345 on offline shop... ours is only $33#wigtok #humanhair #naturalhairtiktok #BlackGirlMagic #blackbeauty",
+      "create_time": "2026/3/18",
+      "view_count": 219,
+      "like_count": 2,
+      "comment_count": 0,
+      "share_count": 0,
+      "save_count": 1,
+      "duration": 0,
+      "avg_watch": "3.26s",
+      "completion": "4.5%",
+      "total_watch": "0h:12m:6s",
+      "new_followers": 0,
+      "gmv": "",
+      "traffic": {
+        "推荐": "97.4%",
+        "个人资料": "2.2%",
+        "已关注": "<0.1%",
+        "搜索": "0.4%",
+        "私信": "<0.1%",
+        "音乐": "<0.1%",
+        "其它": "<0.1%"
+      }
+    },
+    {
+      "id": "7618182308675226893",
+      "title": "why does this wig have so many 5-star reviews?#wigtok #humanhair #naturalhairtiktok #BlackGirlMagic #HDLACE #blackbeauty",
+      "create_time": "2026/3/17",
+      "view_count": 471,
+      "like_count": 5,
+      "comment_count": 0,
+      "share_count": 2,
+      "save_count": 2,
+      "duration": 0,
+      "avg_watch": "3.81s",
+      "completion": "6.7%",
+      "total_watch": "0h:34m:51s",
+      "new_followers": 0,
+      "gmv": "",
+      "traffic": {
+        "推荐": "93.4%",
+        "个人资料": "3.0%",
+        "已关注": "<0.1%",
+        "搜索": "0.2%",
+        "私信": "<0.1%",
+        "音乐": "<0.1%",
+        "其它": "3.4%"
+      }
     }
+  ],
+  "lives": [
+    {
+      "id": "7618833409451789070",
+      "title": "Tana's live flashsale",
+      "date": "2026-03-18",
+      "start_time": "21:26",
+      "duration": "2h19min",
+      "duration_minutes": 139,
+      "total_viewers": 1169,
+      "gmv": 167.59,
+      "ctr": "16.94%",
+      "product_views": 1934,
+      "product_clicks": 198,
+      "ctor": "1.52%",
+      "avg_watch": "26s",
+      "new_followers": 6,
+      "likes": 268,
+      "comments": 49,
+      "gift_revenue": 167.59
+    },
+    {
+      "id": "7618777985805519629",
+      "title": "Tana's wig flashsale!!",
+      "date": "2026-03-18",
+      "start_time": "17:50",
+      "duration": "2h10min",
+      "duration_minutes": 130,
+      "total_viewers": 888,
+      "gmv": 139.44,
+      "ctr": "14.30%",
+      "product_views": 1604,
+      "product_clicks": 127,
+      "ctor": "2.36%",
+      "avg_watch": "22s",
+      "new_followers": 7,
+      "likes": 1,
+      "comments": 25,
+      "gift_revenue": 139.44
+    }
+  ],
+  "revenue": {
+    "creatorFund": 0,
+    "liveGifts": 307.03,
+    "other": 0,
+    "total": 307.03,
+    "monthly": []
+  },
+  "trend": {
+    "dates": [
+      "3/17",
+      "3/18",
+      "3/19",
+      "3/20"
+    ],
+    "views": [
+      471,
+      4286,
+      1405,
+      238
+    ],
+    "likes": [
+      5,
+      36,
+      15,
+      3
+    ]
+  }
 };
 
-// ============================================================
 
-/* GMV localStorage helpers */
-const GMV_KEY = 'tiktok_video_gmv';
-function loadGmvMap() {
-    try { return JSON.parse(localStorage.getItem(GMV_KEY) || '{}'); } catch(e) { return {}; }
-}
-function saveGmvMap(map) {
-    localStorage.setItem(GMV_KEY, JSON.stringify(map));
-}
+/* ── localStorage helpers ── */
+const SK = 'tk_video_sales';
+function loadSales() { try { return JSON.parse(localStorage.getItem(SK)||'{}'); } catch(e){ return {}; } }
+function saveSales(m) { localStorage.setItem(SK, JSON.stringify(m)); }
 
 function fmt(n) {
-    if (n == null || n === '') return '—';
-    if (n >= 1000000) return (n/1000000).toFixed(1) + 'M';
-    if (n >= 10000)   return (n/10000).toFixed(1) + 'w';
-    if (n >= 1000)    return (n/1000).toFixed(1) + 'k';
-    return n.toString();
+    if(n==null||n==='') return '—';
+    if(n>=1000000) return (n/1e6).toFixed(1)+'M';
+    if(n>=10000)   return (n/10000).toFixed(1)+'w';
+    if(n>=1000)    return (n/1000).toFixed(1)+'k';
+    return String(n);
 }
-function fmtUSD(n) {
-    if (!n && n !== 0) return '—';
-    return '$' + parseFloat(n).toFixed(2);
-}
-function calcEng(v) {
-    const total = (v.like_count||0)+(v.comment_count||0)+(v.share_count||0);
-    return v.view_count > 0 ? ((total/v.view_count)*100).toFixed(2) : '0.00';
-}
-function engClass(r) {
-    const f = parseFloat(r);
-    return f >= 5 ? 'eng-high' : f >= 2 ? 'eng-mid' : 'eng-low';
-}
+function pct(s) { return s||'—'; }
 
-/* Overview */
-function renderOverview(d) {
+/* ── Overview ── */
+function renderOv(d) {
     document.getElementById('accountChip').textContent = d.user.name;
     document.getElementById('lastUpdated').textContent = d.lastUpdated;
     const ov = d.overview;
     const cards = [
-        { label:'总播放量',   value: fmt(ov.totalViews),   sub:'所有视频累计',  dir:'up' },
-        { label:'总点赞数',   value: fmt(ov.totalLikes),   sub:'粉丝互动',      dir:'up' },
-        { label:'总评论数',   value: fmt(ov.totalComments),sub:'',              dir:'neutral' },
-        { label:'总分享数',   value: fmt(ov.totalShares),  sub:'',              dir:'neutral' },
-        { label:'平均互动率', value: ov.avgEngagement+'%', sub:'行业基准约 3%', dir:'neutral' },
+        {l:'总播放量', v:fmt(ov.totalViews)},
+        {l:'总点赞数', v:fmt(ov.totalLikes)},
+        {l:'总评论数', v:fmt(ov.totalComments)},
+        {l:'总分享数', v:fmt(ov.totalShares)},
+        {l:'平均互动率', v:ov.avgEngagement+'%'},
     ];
-    document.getElementById('overviewGrid').innerHTML = cards.map(c => `
-        <div class="stat-card">
-            <div class="stat-label">${c.label}</div>
-            <div class="stat-value">${c.value}</div>
-            <div class="stat-sub ${c.dir}">${c.sub}</div>
+    document.getElementById('ovGrid').innerHTML = cards.map(c=>`
+        <div class="ov-card">
+            <div class="ov-label">${c.l}</div>
+            <div class="ov-val">${c.v}</div>
         </div>`).join('');
 }
 
-/* Video table */
-let _videos = [];
-function renderVideoTable(videos) {
-    _videos = videos;
-    const gmvMap = loadGmvMap();
-    document.getElementById('videoTbody').innerHTML = videos.map(v => {
-        const eng = calcEng(v);
-        const savedGmv = gmvMap[v.id] || v.gmv || '';
-        return `<tr>
-            <td><div class="video-cell">
-                <div class="video-thumb">▶</div>
-                <div class="video-info">
-                    <div class="vtitle" title="${v.title}">${v.title}</div>
-                    <div class="vdate">${v.create_time}</div>
+/* ── Video cards ── */
+let _vdata = [];
+function calcGmv(id) {
+    const s = loadSales();
+    const qty = parseFloat(s[id+'_qty']||0);
+    const price = parseFloat(s[id+'_price']||0);
+    return qty && price ? qty*price : 0;
+}
+function renderVcards(videos) {
+    _vdata = videos;
+    document.getElementById('vcCount').textContent = videos.length;
+    const sales = loadSales();
+    document.getElementById('vcardGrid').innerHTML = videos.map(v => {
+        const isViral = v.view_count >= 1000;
+        const g = calcGmv(v.id);
+        const qty = sales[v.id+'_qty']||'';
+        const price = sales[v.id+'_price']||'';
+        const rec = v.traffic?.['推荐'] || '—';
+        const us  = sales[v.id+'_us'] || '';
+        return `
+        <div class="vcard" id="vc_${v.id}">
+            <div class="vcard-thumb">
+                <div class="play">▶</div>
+                <div class="vdate-badge">${v.create_time}</div>
+                ${isViral ? '<div class="viral-badge">🔥 爆款</div>' : ''}
+            </div>
+            <div class="vcard-body">
+                <div class="vcard-title" title="${v.title}">${v.title}</div>
+
+                <div class="vcard-metrics">
+                    <div class="vm">
+                        <div class="vm-label">播放量</div>
+                        <div class="vm-val red">${fmt(v.view_count)}</div>
+                    </div>
+                    <div class="vm">
+                        <div class="vm-label">点赞数</div>
+                        <div class="vm-val">${fmt(v.like_count)}</div>
+                    </div>
+                    <div class="vm">
+                        <div class="vm-label">评论数</div>
+                        <div class="vm-val">${fmt(v.comment_count)}</div>
+                    </div>
+                    <div class="vm">
+                        <div class="vm-label">均观看时长</div>
+                        <div class="vm-val cyan">${v.avg_watch||'—'}</div>
+                    </div>
+                    <div class="vm">
+                        <div class="vm-label">完播率</div>
+                        <div class="vm-val yellow">${v.completion||'—'}</div>
+                    </div>
+                    <div class="vm">
+                        <div class="vm-label">新增粉丝</div>
+                        <div class="vm-val green">+${v.new_followers||0}</div>
+                    </div>
                 </div>
-            </div></td>
-            <td class="metric">${fmt(v.view_count)}</td>
-            <td class="metric text-red">${fmt(v.like_count)}</td>
-            <td class="metric">${fmt(v.comment_count)}</td>
-            <td class="metric text-cyan">${fmt(v.share_count)}</td>
-            <td class="metric">${v.completion||'—'}</td>
-            <td class="text-muted">${v.avg_watch||'—'}</td>
-            <td><span class="eng-badge ${engClass(eng)}">${eng}%</span></td>
-            <td>
-                <div class="gmv-cell">
-                    <span style="color:var(--text-muted);font-size:13px">$</span>
-                    <input class="gmv-input" id="gmv_${v.id}" type="number" step="0.01" min="0"
-                        placeholder="0.00" value="${savedGmv}"
-                        onkeydown="if(event.key==='Enter') saveGmv('${v.id}')"
-                        oninput="document.getElementById('gmvsave_${v.id}').style.opacity=1" />
-                    <button class="gmv-save-btn" id="gmvsave_${v.id}" onclick="saveGmv('${v.id}')" title="保存 GMV">💾</button>
-                    <span class="gmv-saved" id="gmvok_${v.id}">✓</span>
+
+                <div class="vcard-traffic">
+                    <div class="traffic-pill">
+                        <div class="tp-label">推荐流量</div>
+                        <div class="tp-val" style="color:var(--red)">${rec}</div>
+                    </div>
+                    <div class="traffic-pill">
+                        <div class="tp-label">美国流量</div>
+                        <div class="tp-val" style="color:var(--cyan)">
+                            <input id="us_${v.id}" type="text" value="${us}"
+                                placeholder="填写%"
+                                style="background:transparent;border:none;color:var(--cyan);font-size:14px;font-weight:700;width:70px;text-align:center;outline:none;"
+                                onchange="saveUS('${v.id}',this.value)"/>
+                        </div>
+                    </div>
                 </div>
-            </td>
-        </tr>`;
+
+                <hr class="vcard-divider">
+
+                <div class="vcard-inputs">
+                    <div class="inp-group">
+                        <div class="inp-label">动销数量（件）</div>
+                        <input class="inp-field" id="qty_${v.id}" type="number" min="0"
+                            placeholder="0" value="${qty}"
+                            oninput="updateGmv('${v.id}')"/>
+                    </div>
+                    <div class="inp-group">
+                        <div class="inp-label">客单价（$）</div>
+                        <input class="inp-field" id="price_${v.id}" type="number" min="0" step="0.01"
+                            placeholder="0.00" value="${price}"
+                            oninput="updateGmv('${v.id}')"/>
+                    </div>
+                </div>
+
+                <div class="vcard-gmv">
+                    <div>
+                        <div class="gmv-label">自动计算 GMV</div>
+                        <div class="gmv-amount" id="gmv_${v.id}">${g>0?'$'+g.toFixed(2):'—'}</div>
+                    </div>
+                    <button class="gmv-save" onclick="saveVideoSales('${v.id}')">💾 保存</button>
+                </div>
+            </div>
+        </div>`;
     }).join('');
 }
-function saveGmv(id) {
-    const input = document.getElementById('gmv_' + id);
-    const val = input.value.trim();
-    const map = loadGmvMap();
-    if (val === '' || val === '0') {
-        delete map[id];
-    } else {
-        map[id] = parseFloat(val);
-    }
-    saveGmvMap(map);
-    const ok = document.getElementById('gmvok_' + id);
-    const btn = document.getElementById('gmvsave_' + id);
-    ok.classList.add('show');
-    btn.style.opacity = '0.4';
-    setTimeout(() => { ok.classList.remove('show'); btn.style.opacity = '1'; }, 1500);
-    renderRevenue();
-}
-function sortVideos(field, btn) {
-    if (btn) {
-        document.querySelectorAll('#tab-content .sort-btn').forEach(b=>b.classList.remove('active'));
-        btn.classList.add('active');
-    }
-    const sorted = [..._videos].sort((a,b) => {
-        if (field === 'engagement') return parseFloat(calcEng(b)) - parseFloat(calcEng(a));
-        if (field === 'create_time') return (b.create_time||'').localeCompare(a.create_time||'');
-        return (b[field]||0) - (a[field]||0);
-    });
-    renderVideoTable(sorted);
+
+function updateGmv(id) {
+    const qty = parseFloat(document.getElementById('qty_'+id)?.value||0);
+    const price = parseFloat(document.getElementById('price_'+id)?.value||0);
+    const g = qty && price ? qty*price : 0;
+    const el = document.getElementById('gmv_'+id);
+    if(el) el.textContent = g>0 ? '$'+g.toFixed(2) : '—';
 }
 
-/* Live table */
-let _lives = [];
-function renderLiveTable(lives) {
-    _lives = lives;
-    document.getElementById('liveTbody').innerHTML = lives.map(l => `<tr>
+function saveVideoSales(id) {
+    const sales = loadSales();
+    const qty = document.getElementById('qty_'+id)?.value||'';
+    const price = document.getElementById('price_'+id)?.value||'';
+    sales[id+'_qty'] = qty;
+    sales[id+'_price'] = price;
+    saveSales(sales);
+    const btn = document.querySelector(`#vc_${id} .gmv-save`);
+    if(btn) { btn.textContent='✓ 已保存'; btn.style.color='var(--green)'; btn.style.borderColor='var(--green)'; setTimeout(()=>{ btn.textContent='💾 保存'; btn.style.color=''; btn.style.borderColor=''; },1500); }
+    if(document.getElementById('tab-revenue').classList.contains('active')) renderRevenue();
+}
+
+function saveUS(id, val) {
+    const sales = loadSales();
+    sales[id+'_us'] = val;
+    saveSales(sales);
+}
+
+function sortV(field, btn) {
+    if(btn){ document.querySelectorAll('#tab-content .sbtn').forEach(b=>b.classList.remove('on')); btn.classList.add('on'); }
+    const sorted = [..._vdata].sort((a,b)=>{
+        if(field==='create_time') return (b.create_time||'').localeCompare(a.create_time||'');
+        if(field==='gmv_calc') return calcGmv(b.id)-calcGmv(a.id);
+        return (b[field]||0)-(a[field]||0);
+    });
+    renderVcards(sorted);
+}
+
+/* ── Live table ── */
+let _ldata = [];
+function renderLive(lives) {
+    _ldata = lives;
+    document.getElementById('liveTbody').innerHTML = lives.map(l=>`<tr>
         <td>
             <span class="live-tag">LIVE</span>&nbsp;
             <span style="font-weight:500">${l.title}</span>
-            <div style="font-size:11px;color:var(--text-muted);margin-top:3px">${l.date} ${l.start_time||''} · ${l.duration||''}</div>
+            <div style="font-size:10px;color:var(--t2);margin-top:2px">${l.date} ${l.start_time||''} · ${l.duration||''}</div>
         </td>
         <td><span class="acct-tag">${l.account||'@sunny_looove'}</span></td>
         <td class="metric">${fmt(l.total_viewers)}</td>
-        <td class="metric text-green">${l.gmv ? '$'+parseFloat(l.gmv).toFixed(2) : '—'}</td>
+        <td class="metric tg">${l.gmv?'$'+parseFloat(l.gmv).toFixed(2):'—'}</td>
         <td class="metric">${l.ctr||'—'}</td>
         <td class="metric">${fmt(l.product_views)}</td>
         <td class="metric">${fmt(l.product_clicks)}</td>
         <td class="metric">${l.ctor||'—'}</td>
-        <td class="text-muted">${l.avg_watch||'—'}</td>
-        <td class="metric text-cyan">+${l.new_followers||0}</td>
+        <td class="tm">${l.avg_watch||'—'}</td>
+        <td class="metric tc">+${l.new_followers||0}</td>
         <td class="metric">${fmt(l.likes||0)}</td>
         <td class="metric">${fmt(l.comments||0)}</td>
     </tr>`).join('');
 }
-function sortLives(field, btn) {
-    if (btn) {
-        document.querySelectorAll('#tab-live .sort-btn').forEach(b=>b.classList.remove('active'));
-        btn.classList.add('active');
-    }
-    const sorted = [..._lives].sort((a,b) => (b[field]||0) - (a[field]||0));
-    renderLiveTable(sorted);
+function sortL(field, btn) {
+    if(btn){ document.querySelectorAll('#tab-live .sbtn').forEach(b=>b.classList.remove('on')); btn.classList.add('on'); }
+    const sorted = [..._ldata].sort((a,b)=>(b[field]||0)-(a[field]||0));
+    renderLive(sorted);
 }
 
-/* Revenue — daily breakdown */
+/* ── Revenue ── */
 function renderRevenue() {
-    const gmvMap = loadGmvMap();
+    const sales = loadSales();
+    const vByDay={}, lByDay={};
+    let vtot=0, ltot=0;
 
-    // Video GMV total
-    let videoGmvTotal = 0;
-    const videoByDay = {};
-    DASHBOARD_DATA.videos.forEach(v => {
-        const g = parseFloat(gmvMap[v.id] || v.gmv || 0);
-        videoGmvTotal += g;
-        const d = v.create_time;
-        videoByDay[d] = (videoByDay[d]||0) + g;
+    DASHBOARD_DATA.videos.forEach(v=>{
+        const qty=parseFloat(sales[v.id+'_qty']||0);
+        const price=parseFloat(sales[v.id+'_price']||0);
+        const g=qty&&price?qty*price:0;
+        vtot+=g;
+        const d=v.create_time;
+        vByDay[d]=(vByDay[d]||0)+g;
+    });
+    DASHBOARD_DATA.lives.forEach(l=>{
+        const g=parseFloat(l.gmv||0);
+        ltot+=g;
+        lByDay[l.date]=(lByDay[l.date]||0)+g;
     });
 
-    // Live GMV total + by day
-    let liveGmvTotal = 0;
-    const liveByDay = {};
-    DASHBOARD_DATA.lives.forEach(l => {
-        const g = parseFloat(l.gmv || 0);
-        liveGmvTotal += g;
-        const d = l.date;
-        liveByDay[d] = (liveByDay[d]||0) + g;
-    });
+    document.getElementById('revV').textContent='$'+vtot.toFixed(2);
+    document.getElementById('revL').textContent='$'+ltot.toFixed(2);
+    document.getElementById('revT').textContent='$'+(vtot+ltot).toFixed(2);
 
-    const total = videoGmvTotal + liveGmvTotal;
-    document.getElementById('revVideoGMV').textContent = '$' + videoGmvTotal.toFixed(2);
-    document.getElementById('revLiveGMV').textContent  = '$' + liveGmvTotal.toFixed(2);
-    document.getElementById('revTotal').textContent    = '$' + total.toFixed(2);
-
-    // All dates union
-    const allDates = [...new Set([...Object.keys(videoByDay), ...Object.keys(liveByDay)])].sort();
-
-    // Table
-    document.getElementById('revTbody').innerHTML = allDates.map(d => {
-        const vg = videoByDay[d]||0;
-        const lg = liveByDay[d]||0;
-        const tot = vg + lg;
+    const dates=[...new Set([...Object.keys(vByDay),...Object.keys(lByDay)])].sort();
+    document.getElementById('revTbody').innerHTML=dates.map(d=>{
+        const vg=vByDay[d]||0, lg=lByDay[d]||0, tot=vg+lg;
         return `<tr>
-            <td class="text-muted">${d}</td>
-            <td class="metric text-cyan">${vg > 0 ? '$'+vg.toFixed(2) : '—'}</td>
-            <td class="metric text-green">${lg > 0 ? '$'+lg.toFixed(2) : '—'}</td>
-            <td class="metric text-red" style="font-weight:700">${tot > 0 ? '$'+tot.toFixed(2) : '—'}</td>
+            <td class="tm">${d}</td>
+            <td class="metric tc">${vg>0?'$'+vg.toFixed(2):'—'}</td>
+            <td class="metric tg">${lg>0?'$'+lg.toFixed(2):'—'}</td>
+            <td class="metric tr" style="font-weight:700">${tot>0?'$'+tot.toFixed(2):'—'}</td>
         </tr>`;
     }).join('');
 
-    // Chart
-    const ctx = document.getElementById('revenueChart');
-    if (!ctx) return;
-    if (ctx._chartInst) ctx._chartInst.destroy();
-    ctx._chartInst = new Chart(ctx, {
-        type: 'bar',
-        data: {
-            labels: allDates,
-            datasets: [
-                { label: '视频 GMV', data: allDates.map(d=>videoByDay[d]||0),
-                  backgroundColor: 'rgba(105,201,208,.7)', borderRadius: 4 },
-                { label: '直播 GMV', data: allDates.map(d=>liveByDay[d]||0),
-                  backgroundColor: 'rgba(254,44,85,.7)', borderRadius: 4 }
+    const ctx=document.getElementById('revChart');
+    if(!ctx) return;
+    if(ctx._ci) ctx._ci.destroy();
+    ctx._ci=new Chart(ctx,{
+        type:'bar',
+        data:{
+            labels:dates,
+            datasets:[
+                {label:'视频 GMV',data:dates.map(d=>vByDay[d]||0),backgroundColor:'rgba(105,201,208,.7)',borderRadius:4},
+                {label:'直播 GMV',data:dates.map(d=>lByDay[d]||0),backgroundColor:'rgba(254,44,85,.7)',borderRadius:4}
             ]
         },
-        options: {
-            responsive: true, maintainAspectRatio: false,
-            plugins: { legend: { labels: { color: '#888', font: {size:12} } } },
-            scales: {
-                x: { stacked: true, grid: {color:'#2a2a2a'}, ticks: {color:'#888'} },
-                y: { stacked: true, grid: {color:'#2a2a2a'}, ticks: {color:'#888', callback: v=>'$'+v} }
+        options:{
+            responsive:true,maintainAspectRatio:false,
+            plugins:{legend:{labels:{color:'#666',font:{size:11}}}},
+            scales:{
+                x:{stacked:true,grid:{color:'#1e1e1e'},ticks:{color:'#555'}},
+                y:{stacked:true,grid:{color:'#1e1e1e'},ticks:{color:'#555',callback:v=>'$'+v}}
             }
         }
     });
 }
 
-/* Tab switching */
+/* ── Tab switching ── */
 function switchTab(name, el) {
     document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
     document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
-    if (el) el.classList.add('active');
+    if(el) el.classList.add('active');
     document.getElementById('tab-'+name).classList.add('active');
-    if (name === 'revenue') renderRevenue();
+    if(name==='revenue') renderRevenue();
 }
 
-/* Init */
-(function init() {
-    const d = DASHBOARD_DATA;
-    renderOverview(d);
-    renderVideoTable([...d.videos].sort((a,b) => b.view_count - a.view_count));
-    renderLiveTable([...d.lives].sort((a,b) => (b.gmv||0) - (a.gmv||0)));
+/* ── Init ── */
+(function(){
+    const d=DASHBOARD_DATA;
+    renderOv(d);
+    renderVcards([...d.videos].sort((a,b)=>b.view_count-a.view_count));
+    renderLive([...d.lives].sort((a,b)=>(b.gmv||0)-(a.gmv||0)));
 })();
 </script>
 </body>
